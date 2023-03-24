@@ -1,0 +1,2307 @@
+# INTRODUCTION TO NLP
+
+# SESSION 1 AND 2
+
+# pip install spacy
+# import spacy
+# from spacy.lang.en.examples import sentences
+# pip install en_core_web_sm
+# !python -m spacy download en_core_web_sm
+
+import spacy
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#  creating a new instance of a blank English language model
+nlp=spacy.load('en_core_web_sm')
+
+type(nlp)
+
+# creates a structured document object
+doc1=nlp('India, a South Asian nation, is the seventh-largest country by area, the second-most populous country with over 1.38 billion people, and the most populous democracy in the world. India boasts of an immensely rich cultural heritage, including numerous languages, traditions, and people. The country holds its uniqueness in its diversity, and hence has adapted itself to international changes with poise and comfort. While the economy has welcomed international companies to invest in it with open arms since liberalisation in the 1990s, Indians have been prudent and proactive in adopting global approaches and skills. Indian villagers have proudly taken up farming, advanced agriculture and unique handicrafts as their profession on one hand, while the modern industries and professional services sectors are coming up in a big way on the other.Thus, the country is attracting many global majors for strategic investments owing to the presence of a vast range of industries, investment avenues and a supportive Government. A huge population, mostly comprising the youth, is a strong driver for demand and an ample source of manpower.')
+
+type(doc1)
+
+## CREATE A DATAFRAME:
+
+text_s=nlp('We calculate the similarities between documents using the sim object and print the resulting similarity matrix. In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents.Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter. For example, setting num_best=1 will return the document with the highest similarity score.')
+
+import pandas as pd
+
+# Initialize an empty list to store the sentences
+sentences = []
+
+# Loop over each sentence in the document
+for i, sent in enumerate(text_s.sents):
+    # Append the sentence number and sentence text to the list
+    sentences.append({'Sentence Number': i+1, 'Sentence Text': sent.text})
+
+# Convert the list to a pandas DataFrame
+sent_df = pd.DataFrame(sentences)
+
+# Print the resulting DataFrame
+print(sent_df)
+
+
+## OR ###
+
+type(text_s)
+
+doc_list = list(nlp.pipe([text_s]))
+for doc1 in doc_list:
+    for sentence in doc1.sents:
+        print(sentence.text)
+
+# converting doc into a DF of sentences
+# Create a list of sentences from the doc
+sentences = [sent.text for sent in doc1.sents]
+
+# Create a dictionary with the sentences as values and their indices as keys
+data = {'sentence': sentences}
+
+# Convert the dictionary to a pandas DataFrame
+sent_df = pd.DataFrame.from_dict(data, orient='columns')
+
+# Print the resulting DataFrame
+print(sent_df)
+
+token = []
+pos = []
+new_sent_df = sent_df
+for sent in nlp.pipe(new_sent_df['sentence']):
+    if sent.has_annotation('DEP'):
+        token.append([word.text for word in sent] )
+        pos.append([word.pos_ for word in sent])
+        
+print(token)
+print(pos)
+
+new_sent_df['Token']=token
+new_sent_df['POS']=pos
+
+new_sent_df
+
+
+data = new_sent_df['sentence']
+
+data
+
+############
+
+
+
+### TOKENIZATION
+
+Tokenization is a fundamental task in natural language processing that involves splitting text into individual words or tokens. We tokenize text in order to make it easier to process and analyze, since we can then treat each token as a separate unit of meaning.
+
+In summary, tokenization is a key preprocessing step in many natural language processing tasks that involves breaking down text into smaller, more manageable units. By doing so, we can more easily analyze and manipulate text, and prepare it for further processing and analysis.
+
+for token in doc1:
+    print(token)
+
+### Number of tokens
+
+# Count the number of tokens
+
+t_count=0
+for token in doc1:
+    t_count=t_count+1
+    print(token)
+print('The no of tokens:',t_count)
+
+len(doc1)
+
+doc1[0]
+
+doc1[:-1]
+
+### STOP WORDS
+
+# STOP WORDS:
+from spacy.lang.en.stop_words import STOP_WORDS
+
+print(STOP_WORDS)
+
+len(STOP_WORDS)
+
+### Is it a stop word?
+
+# Is it a stop word
+for token in doc1:
+    print(token,'==>',token.is_stop)
+
+# Find the no of stop words tokens in the doc1
+
+stop_count=0
+for token in doc1:
+    if token.is_stop==True:
+        print(token)
+        stop_count=stop_count+1
+print('The count of non-stop word tokens:',stop_count)
+
+# Count the no of non-stop words
+s_count=0
+for token in doc1:
+    print(token,'==>',token.is_stop)
+print('\n\n The non-stop words:\n')
+for token in doc1:
+    if token.is_stop==False:
+        s_count=s_count+1
+        print(token)
+print('\n The count of non-stop words:',s_count)
+
+### Is it a punctuation?
+
+# Count the no of non-punctations
+np_count=0
+for token in doc1:
+    print(token,'==>',token.is_punct)
+print('\n\n The non-punctuation words:\n')
+for token in doc1:
+    if token.is_punct==False:
+        np_count=np_count+1
+        print(token)
+print('\n The count of non-punctuations:',np_count)
+
+# Count the no of punctations
+p_count=0
+for token in doc1:
+    print(token,'==>',token.is_punct)
+print('\n\n The punctuation words:\n')
+for token in doc1:
+    if token.is_punct==True:
+        p_count=p_count+1
+        print(token)
+print('\n The count of punctuations:',p_count)
+
+### Is it a left punctuation?
+
+# Count the no of left punctations
+lp_count=0
+for token in doc1:
+    print(token,'==>',token.is_left_punct)
+print('\n\n The punctuation words:\n')
+for token in doc1:
+    if token.is_left_punct==True:
+        lp_count=lp_count+1
+        print(token)
+print('\n The count of left punctuations:',lp_count)
+
+### Is it right punctuation?
+
+# Count the no of right punctations
+rp_count=0
+for token in doc1:
+    print(token,'==>',token.is_right_punct)
+print('\n\n The right punctuation words:\n')
+for token in doc1:
+    if token.is_right_punct==True:
+        rp_count=rp_count+1
+        print(token)
+print('\n The count of right punctuations:',rp_count)
+
+### Is it an alphabet?
+
+# Count the tokens, whcih are made of alphabets
+a_count=0
+for token in doc1:
+    print(token,'==>',token.is_alpha)
+print('\n\n The alphabets tokens:\n')
+for token in doc1:
+    if token.is_alpha==True:
+        a_count=a_count+1
+        print(token)
+print('\n The count of alphabet-tokens:',a_count)
+
+### Is it a Digit?
+
+# Count the no of digits
+d_count=0
+for token in doc1:
+    print(token,'==>',token.is_digit)
+print('\n\n The digits:\n')
+for token in doc1:
+    if token.is_digit==True:
+        d_count=d_count+1
+        print(token)
+print('\n The count of digits:',d_count)
+
+### Is it Lower case?
+
+# Count the no of lower case tokens
+l_count=0
+for token in doc1:
+    print(token,'==>',token.is_lower)
+print('\n\n The lower case words:\n')
+for token in doc1:
+    if token.is_lower==True:
+        l_count=l_count+1
+        print(token)
+print('\n The count of lower case tokens:',l_count)
+
+### Is it Upper Case?
+
+# Count the no of upper case tokens
+u_count=0
+for token in doc1:
+    print(token,'==>',token.is_upper)
+print('\n\n The lower case words:\n')
+for token in doc1:
+    if token.is_upper==True:
+        u_count=u_count+1
+        print(token)
+print('\n The count of upper case tokens:',u_count)
+
+### Is it Title case?
+
+# Count the no of title case tokens
+t_count=0
+for token in doc1:
+    print(token,'==>',token.is_title)
+print('\n\n The title case words:\n')
+for token in doc1:
+    if token.is_title==True:
+        t_count=t_count+1
+        print(token)
+print('\n The count of title case tokens:',t_count)
+
+### Is it a bracket?
+
+# Count the no of bracket tokens
+b_count=0
+for token in doc1:
+    print(token,'==>',token.is_bracket)
+print('\n\n The bracket tokens:\n')
+for token in doc1:
+    if token.is_bracket==True:
+        b_count=b_count+1
+        print(token)
+print('\n The count of bracket tokens:',b_count)
+
+### Is it a quote?
+
+# Count the no of quote tokens
+q_count=0
+for token in doc1:
+    print(token,'==>',token.is_quote)
+print('\n\n The quote words:\n')
+for token in doc1:
+    if token.is_quote==True:
+        q_count=q_count+1
+        print(token)
+print('\n The count of quote tokens:',q_count)
+
+### Is it lika a number?
+
+# Count the no tokens
+n_count=0
+for token in doc1:
+    print(token,'==>',token.like_num)
+print('\n\n The numbers:\n')
+for token in doc1:
+    if token.like_num==True:
+        n_count=n_count+1
+        print(token)
+print('\n The count of number tokens:',n_count)
+
+### Is it like a url?
+
+# is it a url?
+for token in doc1:
+    print(token.text,'==>',token.like_url)
+
+### Is it like an Email Id?
+
+url_count=0
+for token in doc1:
+    if token.like_url:
+        url_count=url_count+1
+print(' The count of URLs in the doc:',url_count)
+
+# is it an email id?
+for token in doc1:
+    print(token.text,'==>',token.like_email)
+
+email_count=0
+for token in doc1:
+    if token.like_email:
+        email_count=email_count+1
+print(' The count of URLs in the doc:',email_count)
+
+### EXTRA:##########################################33
+
+# Visualization 
+fig = plt.figure()
+ax = fig.add_axes([0,0,1,1])
+ax.axis('equal')
+total_token_count = ['s_count', 'p_count', 'a_count','d_count','n_count']
+data = [s_count, p_count, a_count,d_count,n_count]
+ax.pie(data, labels = total_token_count,autopct='%1.2f%%')
+plt.show()
+
+import matplotlib.pyplot as plt
+
+total_token_count = ['Stop Words', 'Punctuation', 'Numbers', 'URLs', 'Emails', 'Others']
+data = [s_count, p_count, n_count, url_count, email_count, token_count - (s_count + p_count + n_count + url_count + email_count)]
+
+fig, ax = plt.subplots(figsize=(20, 10))
+ax.bar(total_token_count, data)
+ax.set_ylabel('Token Count')
+ax.set_title('Distribution of Tokens')
+
+# Add number labels
+for i, v in enumerate(data):
+    ax.text(i, v + 50, str(v), color='blue', fontweight='bold', ha='center')
+
+plt.show()
+
+from wordcloud import WordCloud
+
+# Concatenate all reviews into a single string
+token_str = ' '.join(token for token in doc1)
+
+# Create and generate a word cloud image
+wordcloud = WordCloud(width = 1000, height = 500, background_color="white").generate(token_str)
+
+# Display the generated image:
+plt.figure(figsize=(15,8))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis("off")
+plt.show()
+
+# FORMING CLEANED DOC:
+
+cleaned_doc=[token for token in doc1 if not token.is_stop and not token.is_punct and not token.like_num and not token.like_url and not token.like_email]
+
+token_clean=0
+for token in cleaned_doc:
+    token_clean=token_clean+1
+    print(token.text)
+
+print("The length of cleaned doc is",token_clean)
+
+# assuming `cleaned_doc` is a list of spacy token objects
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join([token.text for token in cleaned_doc]))
+
+# plot the word cloud
+plt.figure(figsize=(12, 8))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.show()
+
+
+# assuming `preprocessed_text` is a list of preprocessed words
+cleaned_doc_strings = [str(token) for token in cleaned_doc]
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(' '.join(cleaned_doc_strings))
+
+# plot the word cloud
+plt.figure(figsize=(12, 8))
+plt.imshow(wordcloud)
+plt.axis('off')
+plt.show()
+
+
+## TAGGING:
+
+POS tagging is the process of labeling each word in a text with its corresponding part of speech, such as noun, verb, adjective, etc. This information can be useful in a variety of natural language processing tasks, such as text classification, information retrieval, and machine translation. For example, in text classification, knowing the POS tags of words can help us identify which words are most important in distinguishing between different categories of text.
+
+In addition to POS tagging, spaCy provides a wide range of other natural language processing capabilities, such as named entity recognition, dependency parsing, and text classification. By using these tools, we can gain a deeper understanding of the structure and meaning of natural language text, which can be useful in a wide range of applications.
+
+### Parts of Speech-POS
+
+for token in doc1:
+    print(token,'==>',token.pos_)
+
+spacy.explain('AUX')
+
+# pos count:
+pos_count=doc1.count_by(spacy.attrs.POS)
+pos_count
+
+for x,y in sorted(pos_count.items()):
+    print(x,doc1.vocab[x].text,y)
+
+## Visualisation of POS
+
+from spacy import displacy
+displacy.render(doc1,style='dep') # Dependence
+
+options={'compact':'True','color':'blue'}
+
+displacy.render(doc1,style='dep',options=options)
+
+## summary of token:
+
+# Total number of tokens
+
+token_count=0
+stop_count=0
+punct_count=0
+num_count=0
+stop_list = []
+for token in doc1:
+    token_count=token_count+1
+    if token.is_stop:
+        stop_count=stop_count+1
+        stop_list.append(token.text)
+    if token.is_punct:
+        punct_count=punct_count+1
+    if token.like_num:
+        num_count=num_count+1
+print(' The total number of tokens:',token_count)
+print('Total number of stop words in the doc:',stop_count)
+print(' The total number of puncuations in the doc:',punct_count)
+print(' Count of numbers in the doc:',num_count)
+
+tokenized_text = pd.DataFrame()
+
+for i, token in enumerate(doc1):
+    tokenized_text.loc[i, 'text'] = token.text
+    tokenized_text.loc[i, 'lemma'] = token.lemma_,
+    tokenized_text.loc[i, 'pos'] = token.pos_
+    tokenized_text.loc[i, 'tag'] = token.tag_
+    tokenized_text.loc[i, 'dep'] = token.dep_
+    tokenized_text.loc[i, 'is_alpha'] = token.is_alpha
+    tokenized_text.loc[i, 'is_stop'] = token.is_stop
+    tokenized_text.loc[i, 'is_punctuation'] = token.is_punct
+
+tokenized_text[25:50]
+
+# visulaization of summary:
+import matplotlib.pyplot as plt
+figo,axeso = plt.subplots()
+axeso.stem(['tokens','stop_words','puncts','numbers'], [token_count,stop_count,punct_count,num_count],
+           label=[token_count,stop_count,punct_count,num_count],use_line_collection=True, basefmt=' ')
+axeso.legend()
+plt.show()
+
+# Visualising - Most Common Stop Words:
+from wordcloud import WordCloud
+unique_string=(" ").join(stop_list)
+unique_string = unique_string.lower()
+wordcloud = WordCloud(width = 1000, height = 500, background_color ='black').generate(unique_string)
+plt.figure(figsize=(15,8), facecolor = "purple")
+plt.imshow(wordcloud)
+plt.axis("off")
+plt.show()
+plt.close()
+
+# EXTRA:
+# LEMMATIZATION:
+
+for token in doc1:
+    print(token.text,'-',token.lemma_)
+
+# EXTRA:
+# Visualisation of POS:
+
+#NOUN_COUNT
+
+noun_count=0
+
+for token in doc1:
+    if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num and not token.like_url and not token.like_email :
+        if token.pos_=='NOUN':
+            noun_count=noun_count+1
+            print(token.text,'====>',token.pos_)
+            
+# poS=VERB
+
+verb_count=0
+
+for token in doc1:
+    if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num and not token.like_url and not token.like_email  :
+        if token.pos_=='VERB':
+            verb_count=verb_count+1
+            print(token.text,'====>',token.pos_)
+            
+# poS=PROPN
+
+propn_count=0
+
+for token in doc1:
+    if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num and not token.like_url and not token.like_email  :
+        if token.pos_=='PROPN':
+            propn_count=propn_count+1
+            print(token.text,'====>',token.pos_)
+            
+# poS=ADJ
+
+adj_count=0
+for token in doc1:
+    if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num and not token.like_url and not token.like_email   :
+        if token.pos_=='ADJ':
+            adj_count=adj_count+1
+            print(token.text,'====>',token.pos_)
+print(' The count of tokens with PoS as ADJ:',adj_count)
+
+# poS=ADV
+
+adv_count=0
+for token in doc1:
+    if not token.is_stop and not token.is_punct and not token.is_space and not token.like_num and not token.like_url and not token.like_email   :
+        if token.pos_=='ADV':
+            adv_count=adv_count+1
+            print(token.text,'====>',token.pos_)
+
+pos_dict={'noun':noun_count,'verb':verb_count,'propn':propn_count,'adj':adj_count,'adv':adv_count}
+
+
+import pandas as pd
+pos_series=pd.Series(pos_dict)
+pos_series
+
+pos_series.plot(kind='bar',color='teal');
+
+fig = plt.figure()
+ax = fig.add_axes([0,0,1,1])
+ax.axis('equal')
+pos = ['noun', 'verb', 'pronoun', 'adjective', 'adverb']
+data = [1426,426,447,387,55]
+ax.pie(data, labels = pos,autopct='%1.2f%%')
+plt.show()
+
+
+
+
+
+## STORE TOKEN IN A DATAFRAME
+
+# Creating columns for the DF
+
+cols=['Token','POS','Explain_POS','Tag','Explain_Tag']
+cols
+
+rows=[]
+for token in doc1:
+    row=token,token.pos_,spacy.explain(token.pos_),token.tag_,spacy.explain(token.tag_)
+    rows.append(row)
+rows
+
+import pandas as pd
+token_df=pd.DataFrame(rows,columns=cols)
+token_df
+
+token_df['POS'].value_counts()
+
+## COnverting a text into a DF with tokens, pos 
+
+text_df
+
+token=[]
+for sent in nlp.pipe(text_df['Sentence']):
+    if sent.has_annotation('DEP'):
+        token.append([word.text for word in sent] )
+token
+
+token=[]
+pos=[]
+for sent in nlp.pipe(text_df['Sentence']):
+    if sent.has_annotation('DEP'):
+        token.append([word.text for word in sent] )
+        pos.append([word.pos_ for word in sent])
+print(token)
+print(pos)
+
+# Updating text_df
+
+text_df['Token']=token
+text_df['POS']=pos
+
+text_df
+
+### SESSION 3
+
+### Stream of strings as input
+
+When there is a stream of strings as input, we need to 
+
+use nlp.pipe() instead of nlp().
+
+# List of strings:
+
+text_2=['Today is Monday','Tomorrow is Tuesday',
+       'Yesterday was a holiday']
+
+type(text_2)
+
+text_2[0]
+
+text_2[1]
+
+for sentence in nlp.pipe(text_2):
+    print(sentence)
+
+# Tokens
+
+for sentence in nlp.pipe(text_2):
+    print(sentence)
+    for token in sentence:
+        print(token)
+
+# Tuple of strings
+
+text_3=('Today is Monday','Tomorrow is Tuesday',
+       'Yesterday was Sundaya,a holiday')
+
+type(text_3)
+
+text_3[0]
+
+for sent in nlp.pipe(text_3):
+    print(sent)
+    for token in sent:
+        print(token)
+
+# List of tuples
+
+text_4=[('Today is Monday'),('Tomorrow is Tuesday'),
+       ('Yesterday was Sundaya,a holiday')]
+
+type(text_4)
+
+text_4[0]
+
+sent_count=0
+for sent in nlp.pipe(text_4):
+    sent_count=sent_count+1
+    print(sent_count,'=>',sent)
+    for token in sent:
+        print(token)
+
+### A DataFrame
+
+text_2
+
+text_df=pd.DataFrame(text_2,columns=['Sentence'])
+text_df
+
+text_df['Sentence']
+
+for sent in nlp.pipe(text_df['Sentence']):
+    print(sent)
+    for token in sent:
+        print(token)
+
+doc1
+
+for token in doc1:
+    print(token)
+
+## Separating doc into sentences
+
+for sent in doc1.sents:
+    print(sent)
+
+sent_count=0
+for sent in doc1.sents:
+    sent_count=sent_count+1
+    print(sent_count,'==>',sent)
+
+## COnverting a text into a DF with tokens, pos 
+
+text_df
+
+token=[]
+for sent in nlp.pipe(text_df['Sentence']):
+    if sent.has_annotation('DEP'):
+        token.append([word.text for word in sent] )
+token
+
+token=[]
+pos=[]
+for sent in nlp.pipe(text_df['Sentence']):
+    if sent.has_annotation('DEP'):
+        token.append([word.text for word in sent] )
+        pos.append([word.pos_ for word in sent])
+print(token)
+print(pos)
+
+# Updating text_df
+
+text_df['Token']=token
+text_df['POS']=pos
+
+text_df
+
+## SESSION 4
+
+## Parser and NER
+
+## Parser
+
+Tries to find the dependence between the tokens.
+
+A parser takes a sequence of words and assigns a syntactic structure to them according to a set of grammatical rules. The output of a parser is usually a tree or a graph that shows the relationships between the words in the sentence.
+
+The main goal of a parser is to determine the grammatical structure of a sentence, which can be useful for various NLP tasks such as information extraction, text classification, and machine translation. A parser can also be used to identify the meaning of a sentence by analyzing its structure, as well as to generate new sentences that follow the same grammatical rules.
+
+for token in doc1:
+    print(token.text,'==>',token.dep_)
+
+from spacy import displacy
+
+displacy.render(doc1,style='dep')
+
+spacy.explain('nsubj')
+
+for token in doc1:
+    print(token.text,'==>',token.head)
+
+## Noun chunks
+
+for chunk in doc1.noun_chunks:
+    print(chunk.text, '==>',chunk.label_)
+
+## NER: NAMED EMTITY RECOGNIZER
+
+for token in doc1:
+    print(token.text)
+
+for ent in doc1.ents:
+    print(ent.text,'==>',ent.label_)
+
+spacy.explain('NORP')
+
+# List of entities
+
+ent_list=[]
+for ent in doc1.ents:
+    ent_list.append(ent.label_)
+
+print(ent_list)
+
+# List of tuples of text and the respective entities
+
+for ent in doc1.ents:
+    print(ent.text, ent.label_)
+
+ent_list=[(ent.text,ent.label_) for ent in doc1.ents]
+
+print(ent_list)
+
+#### OR
+
+# LIST OF ENTITIES:
+
+for ent in doc1.ents:
+    print(ent.text,'==>',ent.label_)
+
+# COUNTING NUMBER OF ENTITIES:
+
+ent_list=[]
+for ent in doc1.ents:
+    ent_list.append(ent.label_)
+print(ent_list)
+
+from collections import Counter
+Counter(ent_list)
+
+# EXTRA: #############################
+
+eco_ent_count=[ent.label_ for ent in doc.ents]
+print(eco_ent_count)
+
+entity_counts=Counter(eco_ent_count)
+entity_counts_dict={}
+for i in entity_counts.elements():
+    entity_counts_dict[i]=entity_counts[i]
+print(entity_counts_dict)
+
+entity_df = pd.DataFrame(entity_counts_dict.items())
+sns.set(rc = {'figure.figsize':(15,6)})
+sns.barplot(data = entity_df,x=0,y=1)
+
+#########################
+
+# Entities most appeared:
+
+most_ent=[]
+for ent in doc1.ents:
+    most_ent.append(ent.text)
+print(most_ent)
+
+# Most common
+
+Counter(most_ent).most_common()
+
+# most common 10 entities:
+Counter(most_ent).most_common(10)
+
+print(len(doc1.ents))
+
+## VISUALISING NAMED ENTITIES
+
+displacy.render(doc1, style='ent')
+
+## NER FOR WEB DATA:
+
+import requests
+
+from bs4 import BeautifulSoup
+
+url='https://en.wikipedia.org/wiki/India'
+
+print(url)
+
+request=requests.get(url)
+
+print(request)
+
+request=request.text
+print(request)
+
+soup_request=BeautifulSoup(request)
+print(soup_request)
+
+text= soup_request.body.text
+print(text)
+
+type(text)
+
+### Converting the above str to document using NLP
+
+doc3=nlp(text)
+
+type(doc3)
+
+doc3
+
+# NOW PERFORM TOKENIZER ALL STEPS:
+# NOW PERFORM NER ALL STEPS FOR DOC 3
+
+## SESSION 5
+
+## Rule based matching
+
+Rule-based matching is a technique in natural language processing (NLP) that allows you to find and extract specific patterns or phrases from text data. It involves defining a set of rules or patterns that match specific sequences of tokens (words, punctuation, etc.) in a document.
+
+# AFTER PERFORMING: ALL THE ABOVE STEPS OF TOKENIZATION, TAGGER, NER, PARSING:
+
+### Matching
+
+  1) Token Matching 
+  
+  2) Phrase Matching
+  
+  3) Entity Matching
+
+How ?
+
+   1) Create an object/instance of the Matcher class.
+   
+   2) Define a pattern/rule.
+   
+   3) Add the pattern to the object
+   
+   4) Pass the document to the object
+
+from spacy.matcher import Matcher
+
+doc1
+
+### Token matching
+
+#### Occurance of text 'India'
+
+# Create an instance of Matcher
+
+matcher_1=Matcher(nlp.vocab)
+
+# Define a pattern or a rule.
+
+# A pattern is a list of dictionaries.
+
+pattern_1=[{'text':'India'}]
+
+# Add pattern to the object
+
+matcher_1.add('Pattern1',[pattern_1])
+
+# Pass the doc to the object
+
+match_1= matcher_1(doc1)
+
+print(len(match_1))
+
+for match_id,start,end in match_1:
+    span=doc1[start:end]
+    print(span.text)
+
+## Phrase matching
+
+#### Occurance of 'country is'
+
+matcher_2=Matcher(nlp.vocab)
+pattern_2=[{'text':'country'},
+          {'text':'is'}]
+matcher_2.add('Pattern2',[pattern_2])
+match_2=matcher_2(doc1)
+
+print(len(match_2))
+
+for match_id,start,end in match_2:
+    span=doc1[start:end]
+    print(span)
+
+### Occurances of language/s, model's
+
+matcher_3=Matcher(nlp.vocab)
+pattern_3=[{'LEMMA':'language'},
+          {'LEMMA':'model'}]
+
+
+matcher_3.add('Pattern3',[pattern_3])
+match_3=matcher_3(doc1)
+
+# How is lemma different from lemma?,
+# LEMMA MEANS IT WILL SOW ALL POSSIBLE FORMS OF LANGUAGE LIKE LANGUAGE, LANGUAGES ETC.
+# LEMMA: Will provide lemma root form for this this from the dictionary
+
+print(len(match_3))
+
+for match_id,start,end in match_3:
+    span=doc1[start:end]
+    print(span)
+
+## Occurances of alphabets, digits 
+
+matcher_4=Matcher(nlp.vocab)
+pattern_4=[{'IS_ALPHA': True},
+           {'IS_DIGIT':True}]
+
+
+matcher_4.add('Pattern4',[pattern_4])
+match_4=matcher_4(doc1)
+
+print(len(match_4))
+
+for match_id,start,end in match_4:
+    span=doc1[start:end]
+    print(span)
+
+## Occurance of launch, discovery, find,,....
+
+matcher_5=Matcher(nlp.vocab)
+pattern_5=[{'LEMMA':
+            {'IN':['launch','discover','find',
+        'invent','create','develop','innovate',
+                  'form','initiate']}}]
+
+matcher_5.add('Pattern5',[pattern_5])
+match_5=matcher_5(doc1)
+
+# Print all lemmas of these words as placed in the dictionary format
+
+print(len(match_5))
+
+for match_id,start,end in match_5:
+    span=doc1[start:end]
+    print(span)
+
+## Occurance of words of having length>15
+
+# How many words are there witl words having length greater than 15?
+# Will use matching in this
+# Not directly asked
+
+matcher_6=Matcher(nlp.vocab)
+pattern_6=[{'LENGTH':{'>=':15}}]
+matcher_6.add('Pattern6',[pattern_6])
+match_6=matcher_6(doc1)
+
+print(len(match_6))
+
+for match_id,start,end in match_6:
+    span=doc1[start:end]
+    print(span)
+
+## Words of length 2
+
+matcher_7=Matcher(nlp.vocab)
+pattern_7=[{'LENGTH':{'==':2}}]
+matcher_7.add('Pattern7',[pattern_7])
+match_7=matcher_7(doc1)
+
+for match_id,start,end in match_7:
+    span=doc1[start:end]
+    print(span)
+
+### Entity Matching
+
+### Occurance of ent-type 'PERSON'
+
+matcher_10=Matcher(nlp.vocab)
+pattern_10=[{"ENT_TYPE":'PERSON'}]
+matcher_10.add('Pattern10',[pattern_10])
+match_10=matcher_10(doc1)
+
+print(len(match_10))
+
+for match_id,start,end in match_10:
+    span=doc[start:end]
+    print(span.text)
+
+Refer: https://spacy.io/usage/rule-based-matching
+
+## SESSION 6:
+
+## Vectorisation of tokens and similarity of documents
+
+Vectorization of tokens refers to the process of converting text data into a numerical format that can be used as input for machine learning algorithms. In natural language processing, vectorization is commonly used to represent each word in a document as a vector of numbers, based on its frequency, context, or other linguistic properties.
+
+ it is done for: Numerical representation, Dimensionality reduction, Document classification, Information retrieval
+
+# !pip install gensim
+
+import gensim
+import spacy
+nlp=spacy.load('en_core_web_sm')
+
+## Create a list of texts
+
+doc_1='''Chat GPT is a highly popular AI-based program that people use for generating dialogues. The chatbot has a language-based model that the developer fine-tunes for human interaction in a conversational manner. 
+It’s a simulated chatbot primarily designed for customer service; people use it for various other purposes. But what is it? If you are new to this Chat GPT, this guide is for you, so continue reading. 
+What’s Chat GPT?
+Chat GPT is an AI chatbot auto-generative system created by Open AI for online customer care. It is a pre-trained generative chat, which makes use of (NLP) Natural Language Processing. The source of its data is textbooks, websites, and various articles, which it uses to model its own language for responding to human interaction.'''
+
+doc_2='''What is Chat GPT and why is everyone talking about it? On Twitter, blogs, and at the office, Chat GPT has taken over the conversation in marketing. However, not everyone is a fan.
+So what is Chat GPT? Who better to ask than Chat GPT itself? 
+ChatGPT is a variant of the GPT (Generative Pre-training Transformer) language model specifically designed for generating text in a chatbot-like manner. It is trained on a large dataset of human-human conversations and can generate natural language responses to input prompts.
+In other words, it is a smart AI technology that will spit out factual, informative and well-written responses to given prompts. The technology presents endless potential with many applications to marketing including customer service, eCommerce, entertainment, resourcing and more! Along with these benefits, many professionals are questioning what such a helpful tool means for working freelancers and industry professionals.'''
+
+doc_3='''ChatGPT is a large language learning model that was designed to imitate human conversation. It can remember things you have said to it in the past and is capable of correcting itself when wrong.
+It writes in a human-like way and has a wealth of knowledge because it was trained on all sorts of text from the internet, such as Wikipedia, blog posts, books, and academic articles.
+It's easy to learn how to use ChatGPT, but what is more challenging is finding out what its biggest problems are. Here are some that are worth knowing about.
+1. ChatGPT Isn't Always Right
+It fails at basic math, can't seem to answer simple logic questions, and will even go as far as to argue completely incorrect facts. As social media users can attest, ChatGPT can get it wrong on more than one occasion.'''
+
+doc_4='''Texting, chatting and online messaging can be used for much more than simply communicating with your friends. Online communication can help young people build and develop social skills and gives them a platform to share their skills and help each other out.
+Messaging and texting are among the most popular methods of communication among children and teenagers. A study by Common Sense Media in 2018 found that 70% of teenagers report using social media multiple times a day.
+Messaging and texting can be much more than ways to communicate. They can also be tools that help young people learn and master important skills.'''
+
+# Creating the list
+
+docs=[doc_1,doc_2,doc_3,doc_4]
+
+print(docs)
+
+## Choosing the tokens
+
+texts=[]# List of all tokens
+for document in docs:
+    doc=nlp(document)
+    text=[] # List of tokens in the document
+    for token in doc:
+        if not token.is_stop and not token.is_punct and not token.like_num:
+            text.append(token.lemma_)
+    texts.append(text)
+
+# Preprocessing is done, given by sir or remove stop words etc
+# do for all possible preprocessing
+
+print(texts)
+
+# convert this list later into nlp doc using pipe
+
+print(len(texts))
+
+print(len(texts[0]))
+
+print(len(texts[1]))
+
+print(len(texts[2]))
+
+print(len(texts[3]))
+
+## Creation of a corpus
+
+Corpus is a collection of tokens in a dictionary format.
+
+In NLP, a corpus is often represented as a collection of tokens in a dictionary format, where each token corresponds to a word or phrase in the text, and its value is a numerical representation of its frequency or other linguistic property.
+
+from gensim.corpora import Dictionary # from class corpus of gensim
+
+dict_1=Dictionary(texts)
+print(dict_1)
+
+# Will give unique token
+
+# Dict_1 is a corpus that contains tokens in dictionary format
+
+## Giving an ID to each token
+
+print(dict_1.token2id)
+
+# Created a unique value and dictionary
+
+print(len(dict_1))
+
+## Bag of words
+
+The bag-of-words model is a technique used in natural language processing and information retrieval to represent text data as a collection of words or tokens. In this model, a text is represented as a bag (multiset) of its words, disregarding grammar, word order, and context, but keeping track of their frequency.
+
+# To make bag of words we need to first do tokenization and vectorization
+
+bow_vec=[]
+for token in texts:
+    bow_vec.append(dict_1.doc2bow(token))
+
+print(bow_vec)
+
+# Kitni baar a word is coming for a particular ID
+
+# the token with has id 0, is repeated 3 times ---> interpretation of 1st bracket
+
+## Creating BOW Matrix
+
+from gensim.matutils import corpus2dense
+
+bow_matrix=corpus2dense(bow_vec,num_terms=len(dict_1))
+
+print(bow_matrix)
+
+bow_matrix.shape # 172 distinct token and 4 docs
+
+# 172 unique values in 4 documents
+
+# Woh word that is 'AI' pehle doc m 3 times aya h doosre m 3 times , tesre m 4 and 4th m 2 times
+
+# term frequency = number of times the term is there 
+# document frequency
+# IDF: Inverse document frquency
+
+## TFIDF Vectorisation
+
+Term Frequency Inverse Document Frequency
+
+TF-IDF (Term Frequency-Inverse Document Frequency) vectorization is a technique used to represent text documents as a matrix of numbers. It is a more advanced technique than simple bag-of-words (BoW) representation, as it takes into account the importance of each word in the document and the corpus.
+
+The basic idea behind TF-IDF vectorization is to weight the frequency of each word in the document by its importance in the corpus. The weight of each word is determined by two factors:
+
+Term Frequency (TF): This measures the frequency of a word in a document. The more often a word appears in the document, the higher its TF value.
+
+Inverse Document Frequency (IDF): This measures the importance of a word in the corpus. The rarer a word is in the corpus, the higher its IDF value.
+
+
+# Vectorisation is done
+
+from gensim.models import TfidfModel
+tfidf=TfidfModel(bow_vec)
+
+print(tfidf)
+
+tfidf_vec=[]
+for vec in bow_vec:
+    tfidf_vec.append(tfidf[vec])
+
+print(tfidf_vec)
+
+print(len(tfidf_vec))
+
+print(gensim.__version__)
+
+## Similarity of documents
+
+After representing documents as vectors using techniques such as bag-of-words or TF-IDF, we can measure the similarity between them using distance metrics or similarity measures.
+
+The MatrixSimilarity function in Gensim creates an index that can be used to perform similarity queries efficiently. It takes a corpus of documents (represented as vectors) and the number of features (which is the length of the dictionary used to create the vectors) as input.
+
+In your example, tfidf_vec is the corpus of documents represented as TF-IDF vectors, and len(dict_1) is the number of features in the vectors (i.e., the length of the dictionary).
+
+
+from gensim.similarities import MatrixSimilarity
+
+sim=MatrixSimilarity(tfidf_vec,num_features=len(dict_1))
+
+print(sim)
+
+print(sim[tfidf_vec[0]])
+
+# similarity of 1 with 1,2,3,4 resp
+
+print(sim[tfidf_vec[3]])
+
+# 2 methods on vectorisation: tfidf and bad of words
+
+## SESSION 7: TOPIC MODELLING
+
+# Topic modelling- unsupervised
+# topic classification- supervides
+
+# Latent Dirichlet Allocation---> LDA
+
+#!pip install pyLDAvis
+import pyLDAvis
+
+import pyLDAvis.gensim_models
+
+import spacy
+import gensim
+
+nlp=spacy.load('en_core_web_sm')
+
+## Accessing texts
+
+text_1='''chess, one of the oldest and most popular board games, played by two opponents on a checkered board with specially designed pieces of contrasting colours, commonly white and black. White moves first, after which the players alternate turns in accordance with fixed rules, each player attempting to force the opponent’s principal piece, the King, into checkmate—a position where it is unable to avoid capture.
+Chess first appeared in India about the 6th century AD and by the 10th century had spread from Asia to the Middle East and Europe. Since at least the 15th century, chess has been known as the “royal game” because of its popularity among the nobility. Rules and set design slowly evolved until both reached today’s standard in the early 19th century. Once an intellectual diversion favoured by the upper classes, chess went through an explosive growth in interest during the 20th century as professional and state-sponsored players competed for an officially recognized world championship title and increasingly lucrative tournament prizes. Organized chess tournaments, postal correspondence games, and Internet chess now attract men, women, and children around the world.
+This article provides an in-depth review of the history and the theory of the game by noted author and international grandmaster Andrew Soltis.
+Characteristics of the game
+Chess is played on a board of 64 squares arranged in eight vertical rows called files and eight horizontal rows called ranks. These squares alternate between two colours: one light, such as white, beige, or yellow; and the other dark, such as black or green. The board is set between the two opponents so that each player has a light-coloured square at the right-hand corner.
+Algebraic notation
+Individual moves and entire games can be recorded using one of several forms of notation. By far the most widely used form, algebraic (or coordinate) notation, identifies each square from the point of view of the player with the light-coloured pieces, called White. The eight ranks are numbered 1 through 8 beginning with the rank closest to White. The files are labeled a through h beginning with the file at White’s left hand. Each square has a name consisting of its letter and number, such as b3 or g8. Additionally, files a through d are referred to as the queenside, and files e through h as the kingside. See Figure 1.
+Get a Britannica Premium subscription and gain access to exclusive content.
+Subscribe Now
+Moves
+The board represents a battlefield in which two armies fight to capture each other’s king. A player’s army consists of 16 pieces that begin play on the two ranks closest to that player. There are six different types of pieces: king, rook, bishop, queen, knight, and pawn; the pieces are distinguished by appearance and by how they move. The players alternate moves, White going first.
+King
+White’s king begins the game on e1. Black’s king is opposite at e8. Each king can move one square in any direction; e.g., White’s king can move from e1 to d1, d2, e2, f2, or f1.
+Rook
+Each player has two rooks (formerly also known as castles), which begin the game on the corner squares a1 and h1 for White, a8 and h8 for Black. A rook can move vertically or horizontally to any unobstructed square along the file or rank on which it is placed.
+Bishop
+Each player has two bishops, and they begin the game at c1 and f1 for White, c8 and f8 for Black. A bishop can move to any unobstructed square on the diagonal on which it is placed. Therefore, each player has one bishop that travels only on light-coloured squares and one bishop that travels only on dark-coloured squares.
+Queen
+Each player has one queen, which combines the powers of the rook and bishop and is thus the most mobile and powerful piece. The White queen begins at d1, the Black queen at d8.
+Knight
+Each player has two knights, and they begin the game on the squares between their rooks and bishops—i.e., at b1 and g1 for White and b8 and g8 for Black. The knight has the trickiest move, an L-shape of two steps: first one square like a rook, then one square like a bishop, but always in a direction away from the starting square. A knight at e4 could move to f2, g3, g5, f6, d6, c5, c3, or d2. The knight has the unique ability to jump over any other piece to reach its destination. It always moves to a square of a different colour.
+Capturing
+The king, rook, bishop, queen, and knight capture enemy pieces in the same manner that they move. For example, a White queen on d3 can capture a Black rook at h7 by moving to h7 and removing the enemy piece from the board. Pieces can capture only enemy pieces.
+Pawns
+Each player has eight pawns, which begin the game on the second rank closest to each player; i.e., White’s pawns start at a2, b2, c2, and so on, while Black’s pawns start at a7, b7, c7, and so on. The pawns are unique in several ways. A pawn can move only forward; it can never retreat. It moves differently than it captures. A pawn moves to the square directly ahead of it but captures on the squares diagonally in front of it; e.g., a White pawn at f5 can move to f6 but can capture only on g6 or e6. An unmoved pawn has the option of moving one or two squares forward. This is the reason for another peculiar option, called en passant—that is, in passing—available to a pawn when an enemy pawn on an adjoining file advances two squares on its initial move and could have been captured had it moved only one square. The first pawn can take the advancing pawn en passant, as if it had advanced only one square. An en passant capture must be made then or not at all. Only pawns can be captured en passant. The last unique feature of the pawn occurs if it reaches the end of a file; it must then be promoted to—that is, exchanged for—a queen, rook, bishop, or knight.
+Castling
+The one exception to the rule that a player may move only one piece at a time is a compound move of king and rook called castling. A player castles by shifting the king two squares in the direction of a rook, which is then placed on the square the king has crossed. For example, White can castle kingside by moving the king from e1 to g1 and the rook from h1 to f1. Castling is permitted only once in a game and is prohibited if the king or rook has previously moved or if any of the squares between them is occupied. Also, castling is not legal if the square the king starts on, crosses, or finishes on is attacked by an enemy piece.
+Relative piece values
+Assigning the pawn a value of 1, the values of the other pieces are approximately as follows: knight 3, bishop 3, rook 5, and queen 9. The relative values of knights and bishops vary with different pawn structures. Additionally, tactical considerations may temporarily override the pieces’ usual relative values. Material concerns are secondary to winning.
+Object of the game
+When a player moves a piece to a square on which it attacks the enemy king—that is, a square from which it could capture the king if the king is not shielded or moved—the king is said to be in check. The game is won when one king is in check and cannot avoid capture on the next move; this is called checkmate. A game also can end when a player, believing the situation to be hopeless, acknowledges defeat by resigning.
+There are three possible results in chess: win, lose, or draw. There are six ways a draw can come about: (1) by mutual consent, (2) when neither player has enough pieces to deliver checkmate, (3) when one player can check the enemy king endlessly (perpetual check), (4) when a player who is not in check has no legal move (stalemate), (5) when an identical position occurs three times with the same player having the right to move, and (6) when no piece has been captured and no pawn has been moved within a period of 50 moves.
+In competitive events, a victory is scored as one point, a draw as half a point, and a loss as no points.'''
+
+text_1
+
+text_2='''Chess computers were first able to beat strong chess players in the late 1980s. Their most famous success was the victory of Deep Blue over then World Chess Champion Garry Kasparov in 1997, but there was some controversy over whether the match conditions favored the computer.
+In 2002–2003, three human–computer matches were drawn, but, whereas Deep Blue was a specialized machine, these were chess programs running on commercially available computers.
+Chess programs running on commercially available desktop computers won decisive victories against human players in matches in 2005 and 2006. The second of these, against then world champion Vladimir Kramnik is (as of 2019) the last major human-computer match.
+Since that time, chess programs running on commercial hardware—more recently including mobile phones—have been able to defeat even the strongest human players.
+MANIAC (1956)
+In 1956 MANIAC, developed at Los Alamos Scientific Laboratory, became the first computer to defeat a human in a chess-like game. Playing with the simplified Los Alamos rules, it defeated a novice in 23 moves.[1]
+Mac Hack VI (1966–1968)
+In 1966 MIT student Richard Greenblatt wrote the chess program Mac Hack VI using MIDAS macro assembly language on a Digital Equipment Corporation PDP-6 computer with 16K of memory. Mac Hack VI evaluated 10 positions per second.
+In 1967, several MIT students and professors (organized by Seymour Papert) challenged Dr. Hubert Dreyfus to play a game of chess against Mac Hack VI. Dreyfus, a professor of philosophy at MIT, wrote the book What Computers Can’t Do, questioning the computer's ability to serve as a model for the human brain. He also asserted that no computer program could defeat even a 10-year-old child at chess. Dreyfus accepted the challenge. Herbert A. Simon, an artificial intelligence pioneer, watched the game. He said, "it was a wonderful game—a real cliffhanger between two woodpushers with bursts of insights and fiendish plans ... great moments of drama and disaster that go in such games." The computer was beating Dreyfus when he found a move which could have captured the enemy queen. The only way the computer could get out of this was to keep Dreyfus in checks with its own queen until it could fork the queen and king, and then exchange them. That is what the computer did. Soon, Dreyfus was losing. Finally, the computer checkmated Dreyfus in the middle of the board.
+In the spring of 1967, Mac Hack VI played in the Boston Amateur championship, winning two games and drawing two games. Mac Hack VI beat a 1510 United States Chess Federation player. This was the first time a computer won a game in a human tournament. At the end of 1968, Mac Hack VI achieved a rating of 1529. The average rating in the USCF was near 1500.[2]
+Chess x.x (1968–1978)
+In 1968, Northwestern University students Larry Atkin, David Slate and Keith Gorlen began work on Chess (Northwestern University). On 14 April 1970 an exhibition game was played against Australian Champion Fred Flatow, the program running on a Control Data Corporation 6600 model. Flatow won easily. On 25 July 1976, Chess 4.5 scored 5–0 in the Class B (1600–1799) section of the 4th Paul Masson chess tournament in Saratoga, California. This was the first time a computer won a human tournament. Chess 4.5 was rated 1722. Chess 4.5 running on a Control Data Corporation CDC Cyber 175 supercomputer (2.1 megaflops) looked at less than 1500 positions per second. On 20 February 1977, Chess 4.5 won the 84th Minnesota Open Championship with 5 wins and 1 loss. It defeated expert Charles Fenner rated 2016. On 30 April 1978, Chess 4.6 scored 5–0 at the Twin Cities Open in Minneapolis. Chess 4.6 was rated 2040.[3] International Master Edward Lasker stated that year, "My contention that computers cannot play like a master, I retract. They play absolutely alarmingly. I know, because I have lost games to 4.7."[4]
+David Levy's bet (1978)
+Main article: David Levy (chess player) § Computer chess bet
+For a long time in the 1970s and 1980s, it remained an open question whether any chess program would ever be able to defeat the expertise of top humans. In 1968, International Master David Levy made a famous bet that no chess computer would be able to beat him within ten years. He won his bet in 1978 by beating Chess 4.7 (the strongest computer at the time).
+Cray Blitz (1981)
+In 1981, Cray Blitz scored 5–0 in the Mississippi State Championship. In round 4, it defeated Joe Sentef (2262) to become the first computer to beat a master in tournament play and the first computer to gain a master rating (2258).[5]
+HiTech (1988)
+In 1988, HiTech won the Pennsylvania State Chess Championship with a score of 4½–½. HiTech defeated International Master Ed Formanek (2485).[6]
+The Harvard Cup Man versus Computer Chess Challenge was organized by Harvard University. There were six challenges from 1989 until 1995. They played in Boston and New York City. In each challenge the humans scored higher and the highest scorer was a human'''
+
+text_2
+
+text_3='''"It's like a game of chess," we used to say in days gone by.
+Every move our politicians made could be analysed and interpreted, not only for its significance in the wider electoral tournament but also for the possible moves, or false moves, it might induce from opponents.
+That all seems rather quaint now, viewed from our present standpoint where the table on which the chess board so precariously sits is being shaken by a constant bombardment of violent impacts: the very survival of the UK, the war on Islamic State and our future in or out of the EU.
+No wonder the chess pieces are wobbling already and could soon be simply tossed up in the air to land who knows where.
+And now, of course, there is a new player in the game. UKIP thinks the contest has for too long been the preserve of the same exclusive club of elite players.
+"This is an unpredictable election," Ed Miliband told me in what could well go down as the understatement of last week in Manchester.
+There really are so many imponderables piled one on top of another that assessing the likely outcomes next May looks less and less like a chess game and more and more like a mug's game.
+For a start, this era of coalition government means that with the two biggest parties short of a Commons majority, they both have rival sets of target seats on the go at the same time. So they are both in the position of having to fight defensive and offensive campaigns simultaneously.
+Our list of marginal seats here in the West Midlands shows that behind their ultra-close knife-edge marginals, Labour have some other narrow majorities to worry about before they start taking the Conservatives' chessmen off the board.
+These numbers underline the extend to which the Midlands has traditionally been a predominantly two-party contest.
+Liberal Democrat Lorely Burt stunned the Conservatives when she "crept in under the radar" in 2005 but now she has her work cut out to defend a majority of just 175 over the Conservatives.
+How will the emergence of the Green Party, now the official opposition on Solihull Council, affect the chances of the larger parties?
+Lorely Burt's party colleague John Hemming has turned Birmingham Yardley into something of a personal fiefdom, but Labour will be fighting hard to overturn his 3,002 majority and regain the seat he captured from former Education Secretary Estelle Morris in 2005.
+The Liberal Democrats' only other Midlands seat is in Cheltenham where Martin Horwood will defend a more comfortable majority of 4,920 over the Conservatives in what is still the home of the Midlands' only Liberal Democrat-controlled council.
+With confident predictions that the Liberal Democrats will lose many seats, perhaps it is to their traditional "core" constituencies that they may have to turn as they fight to limit the damage.
+And into this otherwise two-way political street comes the new kid on the blog, UKIP, arguably the biggest imponderable of all.
+If, as Nigel Farage says, they are not a repository simply for disillusioned Tory votes but a genuine mass party with broad appeal with their "tanks on Labour's lawn", how might they upset the two-party chess board?
+Take Dudley North, for example, where Labour's wafer-thin majority over the Conservatives faces the additional challenge of the UKIP candidate Bill Etheridge MEP, who has turned his borough into a local power base.
+'Politically toxic'
+On the other hand, how will the Conservatives' tiny majority over Labour in Warwickshire North fare against not just an experienced Labour candidate, former minister Mike O'Brien, but also UKIP who have made great play of opposition to high-speed rail in an area where HS2 has become, to mix my analogies, politically toxic?
+Or could the Midlands UKIP vote shrink, as it did in 2010 to just 4% after a performance in the previous summer's European elections which was impressive but not as emphatic as their clear victory in this year's EU poll?
+The evidence of the local elections on the same day was that if you simply weigh the votes, it is the Conservatives who lose the most. But if you apply those numbers to real council areas (and Parliamentary constituencies?} you see it was Labour who suffered last May, failing to win majorities in target councils like Tamworth, Walsall and Worcester.
+But in the remaining eight months before polling, perhaps the greatest imponderable of all is what politicians call "events" in a region which has always been particularly prone to the ups and downs of the economy.
+The Birmingham and Solihull Chamber of Commerce has just reported a continuing surge in business confidence.
+"Try telling that to young people in my constituency" says Ian Austin, the Labour MP for that key seat of Dudley North, where unemployment remains well above the national average and where wages continue to lag behind prices.
+Put all these chess pieces together and you can see why even those politics watchers with the longest memories say they have never known an election as difficult to predict as this.
+It helps to explain why the mood clearly detectable in Labour's ranks last week in Manchester was more uncertain than hopeful; why the Conservatives, behind Labour in the polls for so long, nevertheless closed their conference in Birmingham with more than a sneaking feeling that they could confound the sooth-sayers; and why I have it on good authority that senior Liberal Democrats are preparing to embark on their conference in Glasgow in a mood of innermost trepidation.
+As the end game draws near, a game of chess has never looked more like a game of chance.....'''
+
+text_3
+
+# Create a list of texts
+
+texts=[text_1,text_2,text_3]
+
+print(texts)
+
+## Creating a word list
+
+words_list=[]
+for text in texts:
+    doc=nlp(text)
+    text_words=[]
+    for token in doc:
+        if token.is_stop==False and token.is_punct==False and token.like_num==False and token.text!='\n':
+            text_words.append(token.lemma_)
+    words_list.append(text_words)
+
+print(words_list)
+
+print(len(words_list))
+
+print(len(words_list[0]))
+
+print(len(words_list[1]))
+
+print(len(words_list[2]))
+
+## Creating a corpus
+
+corpus=[]
+from gensim.corpora import Dictionary
+
+dict=Dictionary(words_list)
+type(dict)
+
+for word in words_list:
+    corpus.append(dict.doc2bow(word))
+
+print(corpus)
+
+len(corpus)
+
+len(corpus[0])
+
+len(corpus[1])
+
+len(corpus[2])
+
+## Creating an LDA model
+
+lda=gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                   num_topics=5,
+                                   id2word=dict)
+
+# we give the number of topics
+
+type(lda)
+
+## Displaying topics
+
+lda.print_topics() # 5 tuples bcz the topics given are 5
+
+# 0.030 probability of the words belonging to that tuple set.
+
+# It gives a unique theme, concept about these words
+
+lda.print_topics()[:2]
+
+## Getting topics for a word
+
+lda.get_term_topics('game')
+
+lda.get_term_topics('square')
+
+lda.get_term_topics('famous')
+
+# the word is a part of word_list but not topic model, so showing empty list
+
+lda.get_term_topics('player')
+
+## Visualisation of topics
+
+pyLDAvis.enable_notebook()
+
+# Enable the notebook to have intercative visualisations
+plot=pyLDAvis.gensim_models.prepare(lda,
+                                    corpus=corpus,
+                                   dictionary=lda.id2word)
+
+plot
+
+# Blue part represents the total freq of occurence of the word, red shows the freq of occurence in the selected topic
+
+# For topic modelling we should have a common topic for analysis
+
+The relevance metric λ in topic modeling refers to a parameter that balances the weighting between the document-specific distribution of topics and the global distribution of topics when estimating the topic-word distributions. A value of λ = 1 prioritizes the document-specific distribution, while a value of λ = 0 prioritizes the global distribution. A value between 0 and 1 allows for a balance between the two.
+
+#### Global distribution
+
+In topic modeling, the global distribution refers to the distribution of topics across the entire corpus of documents being analyzed. It represents the frequency of each topic in the overall collection of documents, and is used in conjunction with the document-specific distribution of topics to estimate the probability of a given word being associated with a given topic. The global distribution is important for providing context and helping to identify which topics are most prominent across the entire corpus.
+
+##### Document specific distribution
+
+In topic modeling, the document-specific distribution refers to the distribution of topics within a particular document. It represents the probability of each topic being present in that specific document, and is used in conjunction with the global distribution of topics to estimate the probability of a given word being associated with a given topic. The document-specific distribution is important because it captures the unique topics and themes present within a specific document, allowing for more precise and nuanced modeling of the underlying topics within the corpus.
+
+
+
+
+
+
+
+## SESSION 8: SENTIMENT ANALYSIS
+
+# Sentiment Analysis and Text Classification 
+
+#!pip install textblob
+
+from textblob import TextBlob
+
+text1='Anuj looks bit sad today'
+
+blob1=TextBlob(text1)
+
+type(blob1)
+
+# We want to have the sentiment
+
+blob1.sentiment
+
+# Another example
+
+text2='The movie was the worst movie I have watched recently. I felt like cheated'
+
+blob2=TextBlob(text2)
+
+blob2.sentiment
+
+text3='The movie was the worst and horrible movie I have watched recently. I felt like cheated. I recommend not to wacth'
+
+blob3=TextBlob(text3)
+
+blob3.sentiment
+
+text4=' I was elated to receive the wonderful news that I have got a call from the bext company I wanted to join. I am so happy and want to share with all you my happiness by throwing a party'
+
+blob4=TextBlob(text4)
+
+blob4.sentiment
+
+text5=' The sun is going to set at 6 PM'
+
+blob5=TextBlob(text5)
+
+blob5.sentiment
+
+
+
+text6='''The Union Budget 2023, presented by the Finance Minister Nirmala Sitharaman proposed to extend the period of limitation on the assessment orders in her budget speech. It was proposed that an order of assessment may be passed within a period of 12 months from the end of the relevant assessment year or the financial year in which updated return is filed, as the case may be. It was also proposed that in cases where search under section 132 of the Income Tax Act, 1961 or requisition under section 132A of the Income Tax Act has been made, the period of limitation of pending assessments shall be extended by twelve months. In the Finance Bill of 2023, it was proposed to amend the section of 153 of the Income Tax Act.  In  sub-section (1A), for the words “nine months”, the words “twelve months” shall be substituted. It was proposed to extend the time limit to 12 months. Additionally, the time limit for completing an assessment or reassessment, as applicable, is extended by 12 months if it is ongoing on the date that a search under Section 132 is commenced or a requisition under Section 132A is made. In this proposal, mainly the time limit has been extended and which would be helpful for the officers to figure out the things and proceed with proper procedure. Additionally, it was proposed to substitute “Principal Chief Commissioner or Chief Commissioner or Principal Commissioner or Commissioner, as the case may be,” for the phrases “Principal Commissioner or Commissioner” at both of their places. As reported before in the case Smt. Rashidaben Taher Morawala Badri Mohalla vsThe DCIT, CITATION: 2022 TAXSCAN (ITAT) 1772, the Division Bench of the Income Tax Appellate Tribunal (ITAT), Ahmedabad quashed the assessment order passed in violation of time limit under Section 153(1) of the Income Tax Act, 1961.
+
+Read More: https://www.taxscan.in/union-budget-2023-period-of-limitation-on-pending-assessment-extended-by-12-months/250888/'''
+
+blob6=TextBlob(text6)
+
+blob6.sentiment
+
+# EXTRA: ########################################
+
+# sentiment analysis of a document and create a dataframe of it
+
+import pandas as pd
+from textblob import TextBlob
+
+# Define the text
+text = "We calculate the similarities between documents using the sim object and print the resulting similarity matrix. In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents. Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter. For example, setting num_best=1 will return the document with the highest similarity score."
+
+# Create a list of sentences
+sentences = text.split('. ')
+
+# Create a dictionary with the sentences
+data = {'Sentence': sentences}
+
+# Convert the dictionary to a pandas DataFrame
+sent_df = pd.DataFrame.from_dict(data)
+
+# Perform sentiment analysis using TextBlob and add new columns with the sentiment polarity and subjectivity scores
+sent_df[['Sentiment_Polarity', 'Subjectivity']] = sent_df['Sentence'].apply(lambda x: pd.Series(TextBlob(x).sentiment))
+
+# Print the resulting DataFrame
+print(sent_df)
+
+
+import pandas as pd
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+
+# Create the sentences as a list
+sentences = ['We calculate the similarities between documents using the sim object and print the resulting similarity matrix.',
+             'In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents.',
+             'Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter.',
+             'For example, setting num_best=1 will return the document with the highest similarity score.']
+
+# Create a dictionary to hold the sentences and their sentiment scores
+data = {'Sentence': sentences}
+
+# Convert the dictionary to a pandas DataFrame and add a column for sentence number
+sent_df = pd.DataFrame.from_dict(data)
+sent_df['SentenceNumber'] = sent_df.index + 1
+
+# Use TextBlob to get the sentiment scores for each sentence
+sent_df['Sentiment'] = sent_df['Sentence'].apply(lambda x: TextBlob(x).sentiment.polarity)
+
+# Create a bar graph of sentiment scores
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.barh(sent_df['SentenceNumber'], sent_df['Sentiment'], color='blue')
+
+# Set the chart title and axis labels
+ax.set_title('Sentiment Analysis of Sentences')
+ax.set_xlabel('Sentiment Score')
+ax.set_ylabel('Sentence Number')
+
+# Show the chart
+plt.show()
+
+
+import pandas as pd
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+
+# Create the sentences as a list
+sentences = ['We calculate the similarities between documents using the sim object and print the resulting similarity matrix.',
+             'In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents.',
+             'Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter.',
+             'For example, setting num_best=1 will return the document with the highest similarity score.']
+
+# Create a dictionary to hold the sentences and their sentiment scores
+data = {'Sentence': sentences}
+
+# Convert the dictionary to a pandas DataFrame and add a column for sentence number
+sent_df = pd.DataFrame.from_dict(data)
+sent_df['SentenceNumber'] = sent_df.index + 1
+
+# Use TextBlob to get the sentiment scores (polarity and subjectivity) for each sentence
+sent_df['SentimentPolarity'] = sent_df['Sentence'].apply(lambda x: TextBlob(x).sentiment.polarity)
+sent_df['SentimentSubjectivity'] = sent_df['Sentence'].apply(lambda x: TextBlob(x).sentiment.subjectivity)
+
+# Create a bar graph of sentiment scores
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.barh(sent_df['SentenceNumber'], sent_df['SentimentPolarity'], color='blue')
+
+# Set the chart title and axis labels
+ax.set_title('Sentiment Analysis of Sentences')
+ax.set_xlabel('Sentiment Polarity')
+ax.set_ylabel('Sentence Number')
+
+# Show the chart
+plt.show()
+
+# Create a bar graph of subjectivity scores
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.barh(sent_df['SentenceNumber'], sent_df['SentimentSubjectivity'], color='green')
+
+# Set the chart title and axis labels
+ax.set_title('Subjectivity Analysis of Sentences')
+ax.set_xlabel('Sentiment Subjectivity')
+ax.set_ylabel('Sentence Number')
+
+# Show the chart
+plt.show()
+
+
+# table:
+
+from tabulate import tabulate
+
+# Create a list of tuples for the sentiment analysis results for each answer
+sentiment_results = [("Answer 1", "Positive", "0.1779", "Somewhat subjective", "0.4636"),
+                     ("Answer 2", "Positive", "0.1820", "Relatively subjective", "0.5512"),
+                     ("Answer 3", "Positive", "0.1604", "Somewhat subjective", "0.5342"),
+                     ("Answer 4", "Slightly negative", "-0.0135", "Relatively objective", "0.5936"),
+                     ("Answer 5", "Positive", "0.1377", "Somewhat subjective", "0.4684"),
+                     ("Answer 6", "Slightly negative", "-0.0407", "Relatively objective", "0.5548")]
+
+# Define the headers for the table
+headers = ["Answer", "Sentiment", "Polarity", "Subjectivity", "Subjectivity Score"]
+
+# Print the table
+print(tabulate(sentiment_results, headers=headers, tablefmt="grid"))
+
+Subjectivity is a measure of how much of a personal opinion, feeling, or belief is expressed in a text or statement, as opposed to just stating factual information. In natural language processing, subjectivity is often measured on a scale of 0 to 1, with 0 indicating a completely objective statement and 1 indicating a completely subjective statement.
+
+Polarity is a measure of the sentiment or emotional tone of a text or statement. It indicates whether the language used in the text expresses a positive, negative, or neutral sentiment. In natural language processing, polarity is often measured on a scale of -1 to +1, with -1 indicating a very negative sentiment, 0 indicating a neutral sentiment, and +1 indicating a very positive sentiment.
+
+
+
+
+
+# text classification for a doc:
+
+import pandas as pd
+from textblob import TextBlob
+
+# Define the document sentences
+sentences = ['We calculate the similarities between documents using the sim object and print the resulting similarity matrix.',
+             'In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents.',
+             'Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter.',
+             'For example, setting num_best=1 will return the document with the highest similarity score.']
+
+# Define a dictionary to store the sentences and their sentiment scores
+data = {'Sentence': sentences, 'Sentiment': [], 'Label': []}
+
+# Calculate the sentiment scores and labels for each sentence
+for sentence in sentences:
+    # Perform sentiment analysis on the sentence
+    blob = TextBlob(sentence)
+    sentiment_score = blob.sentiment.polarity
+    
+    # Label the sentence based on the sentiment score
+    if sentiment_score > 0:
+        label = 'Positive'
+    elif sentiment_score < 0:
+        label = 'Negative'
+    else:
+        label = 'Neutral'
+    
+    # Append the sentiment score and label to the data dictionary
+    data['Sentiment'].append(sentiment_score)
+    data['Label'].append(label)
+
+# Convert the dictionary to a pandas DataFrame
+sent_df = pd.DataFrame(data)
+
+# Print the resulting DataFrame
+print(sent_df)
+
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load the text data
+text_data = [
+    "We calculate the similarities between documents using the sim object and print the resulting similarity matrix.",
+    "In this case, the output will be a 4x4 matrix, where each element represents the cosine similarity between two documents.",
+    "Note that MatrixSimilarity can be used with other similarity measures besides cosine similarity by specifying a different num_best parameter.",
+    "For example, setting num_best=1 will return the document with the highest similarity score."
+]
+sentiment_labels = ['neutral', 'neutral', 'negative', 'neutral']
+
+# Create a DataFrame with the text data and labels
+data = pd.DataFrame({'text': text_data, 'sentiment': sentiment_labels})
+
+# Preprocess the text data (e.g. remove stopwords, tokenize, lemmatize, etc.)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(data['text'], data['sentiment'], test_size=0.2, random_state=42)
+
+# Vectorize the text data using TF-IDF
+vectorizer = TfidfVectorizer()
+X_train_vectorized = vectorizer.fit_transform(X_train)
+X_test_vectorized = vectorizer.transform(X_test)
+
+# Train a text classification model on the vectorized data
+model = LogisticRegression()
+model.fit(X_train_vectorized, y_train)
+
+# Evaluate the model on the testing data
+y_pred = model.predict(X_test_vectorized)
+accuracy = accuracy_score(y_test, y_pred)
+report = classification_report(y_test, y_pred)
+
+print(f"Accuracy: {accuracy}")
+print(f"Classification report:\n{report}")
+
+
+
+
+
+
+# GRAPH? ##################################
+
+# Text Classification
+
+from sklearn.datasets import fetch_20newsgroups
+
+fetch_20newsgroups
+
+train=fetch_20newsgroups(subset='train')
+
+test=fetch_20newsgroups(subset='test')
+
+type(train)
+
+train.keys()
+
+
+
+train['target_names']
+
+train['target']
+
+import numpy as np
+
+np.unique(train['target'])
+
+train['data']
+
+print(train['data'][1])
+
+print(train['target_names'][1])
+
+print(train['data'][10])
+
+print()
+
+print(train['target_names'][10])
+
+print(train['data'][100])
+
+print()
+
+
+
+## Building the model
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from sklearn.naive_bayes import MultinomialNB
+
+from sklearn.pipeline import make_pipeline
+
+mnb=make_pipeline(TfidfVectorizer(),MultinomialNB())
+
+type(mnb)
+
+# Training
+
+mnb.fit(train['data'],train['target'])
+
+# Prediction
+
+y_pred=mnb.predict(test['data'])
+
+y_pred
+
+## Performance of the model
+
+from sklearn.metrics import classification_report,confusion_matrix
+
+report=classification_report(test['target'],y_pred)
+
+print('The report:\n',report)
+
+# Confusion Matrix
+
+cm=confusion_matrix(test['target'],y_pred)
+
+print('The confusion Matrix:\n',cm)
+
+## Testing with our own data
+
+def news_group_prediction(doc):
+    group_pred=mnb.predict([doc])
+    return test['target_names'][group_pred[0]]
+
+news_group_prediction('Computer technology is becoming more user friendly. Windows operating systems are easy to operate')
+
+news_group_prediction('The soocer is the one sport most of Eurpeaons follow. It is quite a big business, which involved lot of anlaytucs as well  ')
+
+## SESSION 9: TEXT CLUSTERING
+
+# Text Clustering
+
+# Supervised clustering
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+## Accessing the dataset
+
+bbc=pd.read_csv('bbc-text.csv')
+
+bbc
+
+bbc['category'].value_counts()
+
+## Selecting the data
+
+data=bbc['text']
+
+data
+
+data[0]
+
+data[1]
+
+data[10]
+
+data[100]
+
+data[1000]
+
+## Converting text into vectors
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+tf=TfidfVectorizer()
+
+features=tf.fit_transform(data)
+
+features
+
+print(features)
+
+## Clustering using K Means
+
+from sklearn.cluster import KMeans
+
+
+SSD=[]
+for k in range(1,10):
+    kmeans=KMeans(n_clusters=k, random_state=10)
+    kmeans.fit(features)
+    SSD.append(kmeans.inertia_)
+plt.plot(range(1,10),SSD);
+
+## Applying silhouette_score
+from sklearn.metrics import silhouette_score
+SS=[]
+for k in range(2,11):
+    kmeans=KMeans(n_clusters=k, random_state=10)
+    kmeans.fit(features)
+    SS.append(silhouette_score(features,kmeans.predict(features)))
+    
+plt.plot(range(2,11),SS);
+
+## Building the model with 5 clusters
+
+kmeans=KMeans(n_clusters=5,random_state=10)
+kmeans.fit(features)
+
+
+kmeans.labels_
+
+## Updating the DF with cluster labels
+
+bbc['Cluster']=kmeans.labels_
+
+bbc
+
+## Dimensionality reduction using TSNE
+
+from sklearn.manifold import TSNE
+
+tsne=TSNE(n_components=2,perplexity=30,random_state=10)
+
+features_tsne=tsne.fit_transform(features)
+
+features_tsne
+
+features_tsne.shape
+
+## Visualisation 
+
+plt.figure(figsize=(10,8))
+plt.scatter(features_tsne[:,0],features_tsne[:,1]);
+
+plt.figure(figsize=(10,8))
+plt.scatter(features_tsne[:,0],features_tsne[:,1],c=bbc['Cluster']);
+
+
+
+### EXTRA:
+
+
+# TRYING A A DATAFRAME:
+
+text_c=nlp('worldcom boss  left books alone  former worldcom boss bernie ebbers  who is accused of overseeing an $11bn (£5.8bn) fraud  never made accounting decisions  a witness has told jurors.  david myers made the comments under questioning by defence lawyers who have been arguing that mr ebbers was not responsible for worldcom s problems. the phone company collapsed in 2002 and prosecutors claim that losses were hidden to protect the firm s shares. mr myers has already pleaded guilty to fraud and is assisting prosecutors.  on monday  defence lawyer reid weingarten tried to distance his client from the allegations. during cross examination  he asked mr myers if he ever knew mr ebbers  make an accounting decision  .  not that i am aware of   mr myers replied.  did you ever know mr ebbers to make an accounting entry into worldcom books   mr weingarten pressed.  no   replied the witness. mr myers has admitted that he ordered false accounting entries at the request of former worldcom chief financial officer scott sullivan. defence lawyers have been trying to paint mr sullivan  who has admitted fraud and will testify later in the trial  as the mastermind behind worldcom s accounting house of cards.  mr ebbers  team  meanwhile  are looking to portray him as an affable boss  who by his own admission is more pe graduate than economist. whatever his abilities  mr ebbers transformed worldcom from a relative unknown into a $160bn telecoms giant and investor darling of the late 1990s. worldcom s problems mounted  however  as competition increased and the telecoms boom petered out. when the firm finally collapsed  shareholders lost about $180bn and 20 000 workers lost their jobs. mr ebbers  trial is expected to last two months and if found guilty the former ceo faces a substantial jail sentence. he has firmly declared his innocence.')
+
+import pandas as pd
+
+# Initialize an empty list to store the sentences
+sentences = []
+
+# Loop over each sentence in the document
+for i, sent in enumerate(text_c.sents):
+    # Append the sentence number and sentence text to the list
+    sentences.append({'Sentence Number': i+1, 'Sentence Text': sent.text})
+
+# Convert the list to a pandas DataFrame
+sent_df = pd.DataFrame(sentences)
+
+# Print the resulting DataFrame
+print(sent_df)
+
+
+sent_df
+
+# selecting data
+data=sent_df['Sentence Text']
+
+data[0]
+
+## Converting text into vectors
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+tf=TfidfVectorizer()
+
+features=tf.fit_transform(data)
+
+features
+
+print(features)
+
+## Clustering using K Means
+
+from sklearn.cluster import KMeans
+
+
+SSD=[]
+for k in range(1,10):
+    kmeans=KMeans(n_clusters=k, random_state=10)
+    kmeans.fit(features)
+    SSD.append(kmeans.inertia_)
+plt.plot(range(1,10),SSD);
+
+## Applying silhouette_score
+from sklearn.metrics import silhouette_score
+SS=[]
+for k in range(2,11):
+    kmeans=KMeans(n_clusters=k, random_state=10)
+    kmeans.fit(features)
+    SS.append(silhouette_score(features,kmeans.predict(features)))
+    
+plt.plot(range(2,11),SS);
+
+from yellowbrick.cluster import KElbowVisualizer
+from sklearn.cluster import KMeans
+
+fig_elb = KElbowVisualizer(KMeans(random_state=42, n_init=10, max_iter=10000), k=(2,10))
+fig_elb.fit(features)
+print(f'Elbow value= {fig_elb.elbow_value_}')
+fig_elb.show()
+
+## Building the model with 5 clusters
+
+kmeans=KMeans(n_clusters=5,random_state=10)
+kmeans.fit(features)
+
+
+kmeans.labels_
+
+## Updating the DF with cluster labels
+
+sent_df['Cluster']=kmeans.labels_
+
+sent_df
+
+## Dimensionality reduction using TSNE
+
+from sklearn.manifold import TSNE
+
+tsne=TSNE(n_components=2,perplexity=30,random_state=10)
+
+features_tsne=tsne.fit_transform(features)
+
+features_tsne
+
+features_tsne.shape
+
+## Visualisation 
+
+plt.figure(figsize=(10,8))
+plt.scatter(features_tsne[:,0],features_tsne[:,1]);
+
+plt.figure(figsize=(10,8))
+plt.scatter(features_tsne[:,0],features_tsne[:,1],c=sent_df['Cluster']);
+
+
+
+## THEORY:
+
+NLP (lecture 1 to 4):
+en_core_web_sm: trained pipeline for the English language.
+There are 326 stop words in the spacy library for English language.
+Default spacy pipeline:
+ 
+
+When you call NLP on Unicode text, spacy first tokenizes the text to produce a doc object. Doc is then processed in several different steps, what we also refer to as pipeline.
+1.	Tokenizer
+2.	Tagger
+3.	Parser
+4.	NER
+
+Tokenization:
+Tokenization is the task of splitting a text into meaningful segments, called tokens. These tokens can be words, punctuations, numbers or other special characters that are the building blocks of a sentence. In Spacy, input of a tokenizer is a Unicode text and output is a Doc object.
+
+token.is_stop - True if the token is a stop word else false.
+token.is_punct - True if the token is a punctuation else false.
+token.is_left_punct - True if the token is a left punctuation else false.
+token.is_right_punct - True if the token is a right punctuation else false.
+token.is_alpha - True if the token is an alphabet else false.
+token.is_digit - True if the token is a digit else false.
+token.is_lower - True if all the letters of the token are in lower case else false.
+token.is_upper - True if all the letters of the token are in upper case else false.
+token.is_title - True if first letter of the token is in upper case and rest all letters of the token are in lower case else false.
+token.is_quote - True if token is a quote (single quotes or double quotes)else false.
+token.like_num - True whenever the token is like a number (e.g., 2, 2nd, 45th, third, fifth) else false.
+token.like_url - True if the token is a url (e.g., www.timesofindia.com) else false.
+token.like_email - True if the token is an email ID (abc123@nmims.edu.in) else false.
+
+
+Parts of speech (POS):
+token.pos_ - gives the parts of speech of every token.
+It is POS tagging. POS tagging is marking each token of the sentence with its appropriate part of speech such as noun, verb and so on. We can use it to clean our text if we wish to remove a particular part of speech. 
+spacy.explain(token.pos_) - gives the explanation of a particular POS.
+
+Stream of strings:
+When there is a stream of strings as input we need to use nlp.pipe.
+The nlp.pipe method in spaCy is used to process a sequence of texts as a stream, and apply all the components of a spaCy nlp object to each text, such as tokenization, lemmatization, and named entity recognition, etc.
+doc.sents - this is used to separate the doc into sentences.
+
+Tagger:
+token.tag_ - Tagger provides tagging (a label or a class) to each of the POS.
+
+Difference between token.pos_ and token.tag_:
+In spaCy, token.pos_ and token.tag_ are both attributes that give information about the part-of-speech (POS) of a token. However, they provide different levels of detail.
+•	token.pos_ gives the coarse-grained POS tag of a token, which categorizes the token into high-level classes such as noun, verb, adjective, etc.
+•	token.tag_ gives the fine-grained POS tag of a token, which provides a more detailed categorization of a token's role in a sentence. For example, the fine-grained tag for a noun could be singular or plural, proper noun, etc.
+Here's an example to illustrate the difference:
+Code:
+import spacy
+nlp = spacy.load("en_core_web_sm")
+text = "Apple is a company that makes iPhones."
+doc = nlp(text)
+for token in doc:
+    print(token.text, token.pos_, token.tag_)
+The output would be:
+Apple PROPN NNP
+is VERB VBZ
+a DET DT
+company NOUN NN
+that ADP WDT
+makes VERB VBZ
+iPhones NOUN NNS
+. PUNCT .
+
+
+Parser (Tries to find the dependence between the tokens):***
+In NLP, a parser is a computational tool that analyzes the grammatical structure of a sentence and represents it in a structured format, such as a parse tree or a dependency graph. Parsing helps to identify the relationships between the words in a sentence and to understand the meaning of the sentence.
+There are different types of parsers in NLP, including constituency parsers and dependency parsers. A constituency parser aims to represent a sentence as a tree structure, with each node representing a constituent (a phrase or a word) and each parent-child relationship representing the grammatical relationship between constituents. A dependency parser, on the other hand, aims to represent a sentence as a graph structure, with each node representing a word and each directed edge representing the grammatical relationship between words.
+token.dep_ - an attribute in spaCy that gives the dependency label of a token, which indicates the relationship between the token and other tokens in the sentence. The dependency label tells us how the token is connected to its parent token in the dependency tree of the sentence.
+
+NER (Named Entity Recognizer):
+Named Entity Recognition (NER) is a task in natural language processing (NLP) that involves identifying and categorizing named entities such as people, organizations, locations, and dates, in a given text.
+The doc.ents property returns a sequence of named entities (if any) detected in the document.
+The ent.label_ property returns the named entity type for the given Span object, as a string.
+SpaCy uses a set of pre-defined named entity types, such as "PERSON", "ORG", "GPE" (geopolitical entity), "DATE", etc. The ent.label_ property returns one of these pre-defined types, based on the named entity recognition performed by SpaCy.
+
+**displacy in spacy’s most impressive offering is used for visualization purposes. 
+displacy.render(doc_name, style='ent')
+
+NER for web data:
+Library used for scraping web data is requests.
+
+**Confusion in BeautifulSoup
+
+collections.Counter is a built-in Python class in the collections module that provides a way to count elements. It implements a dictionary-like object where elements are stored as keys and their counts are stored as values.
+
+collections.Counter.most_common(n) is a method of the Counter class in the collections module in Python. It returns a list of the n most common elements and their counts from the most common to the least. The optional argument n specifies the maximum number of elements to return. If n is not specified, it returns all the elements.
+
+collections.Counter.most_common(10) -  returns 10 most common entities.
+
+
+
+
+
+
+
+
+
+
+
+
+import spacy
+
+nlp = spacy.load('en_core_web_sm')
+
+doc1 = nlp('Hi Studious Kid. Kuch nahi hoga itna sab ratne se')
+
+i = 0
+for token in doc1:
+	i = i+1
+	print(token)
+print(i)
+
+Total number of stop words -- 326
+
+
+When there is a stream of strings as input, we need to use nlp.pipe() instead of nlp()
+
+How to separate document into sentences? ---> doc_name.sents
+
+Assign parts of speech tags ---> tag_
+Numeric value for the above thing--->tag
+Assign Part of Speech ---> pos_
+Numeric Value----> pos
+
+To count the number of times a Part Of Speech is occuring: count_by(spacy.attrs.POS)
+Visualisation of POS ----> displacy.render(doc1,style='dep')
+
+
+token.head is a parser that refers to head of a token in a syntax tree, which is a structure that represents the grammatical relationships between the words in a sentence.
+
+label_ specifies the label of the text .... NP for Noun Phrase (.label_ can also be used to find entity label)
+
+
+NER --- Named Entity Recognizer
+
+.ents used to detect and label named entities
+
+
+
+:::NER for WEB SCRAPING:::
+
+import requests
+from bs4 import BeautifulSoup
+
+
+request = requests.get(url)
+request <--- printing this will give response 200
+
+request.text <--- printing this will give the text
+
+BeautifulSoup
+In NLP, it is used to parse and clean text data obtained from websites, allowing the user to extract relevant information for analysis or processing. 
+BeautifulSoup provides methods to navigate, search, and modify the parse tree, making it a useful tool for pre-processing and cleaning text data in NLP tasks.
+BeautifulSoup can be used to:
+1. scrape the website
+2. extract all the text content
+3. remove any HTML tags, special characters, and extra whitespaces.
+
+
+Most appeared entities -- sorted order highest to lowest --- most_common()
+
+:: Rule Based Matching ::
+
+from spacy.matcher import Matcher
+
+
+Matching
+1) Token Matching
+2) Phrase Matching
+3) Entity Matching
+
+How?
+1) Create an object/instance of the Matcher class.
+2) Define a pattern/rule.
+3) Add the pattern to the object
+4) Pass the document to the object
+
+
+## Creating an object of the Matcher class
+
+obj = Matcher(nlp.vocab)
+
+The pattern that is defined --- is a list of dictionaries.
+ example for pattern defining: pattern_1=[{'text':'ChatGPT'}]
+
+# Add pattern to the object
+
+obj.add('Pattern1',[pattern_1])
+
+# Pass the doc to the object
+
+match_1= obj(doc)
+
+
+
+
+### Pattern ###
+
+Pattern for phrase based:
+
+pattern_2=[{'text':'ChatGPT'},
+          {'text':'is'}]
+
+Pattern for lemma::
+
+pattern_3=[{'LEMMA':'language'},
+          {'LEMMA':'model'}]
+
+
+Pattern for occurence of alphabets and digits:
+pattern_4=[{'IS_ALPHA': True},
+           {'IS_DIGIT':True}]
+
+Pattern for occurence of many words: launch, discovery, find etc
+pattern_5=[{'LEMMA':
+            {'IN':['launch','discover','find',
+        'invent','create','develop','innovate',
+                  'form','initiate']}}]
+
+
+Pattern for length greater than 15
+pattern_6=[{'LENGTH':{'>=':15}}]
+
+
+Pattern for length equal to 2
+pattern_7=[{'LENGTH':{'==':2}}]
+
+
+Pattern for Entity based matching: 
+
+pattern_10=[{"ENT_TYPE":'PERSON'}]
+
+
+
+
+
+
+# sentiment:
+
+import nltk
+from textblob import TextBlob
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
+
+from spacy import displacy
+from spacy.matcher import Matcher
+from collections import Counter
+
+doc1 = doc.text.lower()
+words = nltk.word_tokenize(text)
+sents = nltk.sent_tokenize(text)
+len(sents)
+
+word_emotions = []
+cntp =0 
+cntneg=0
+cntneu=0
+for word in sents:
+    word_emotions.append(TextBlob(word).sentiment)
+    #print(len(word_emotions))
+    for emotion in word_emotions:
+      polarity = emotion.polarity
+    if polarity > 0:
+      cntp=cntp+1
+    elif polarity < 0:
+      cntneg=cntneg+1
+    else:
+      cntneu=cntneu+1
+print(cntneg , cntneu , cntp)
+
+import pandas as pd
+  
+# initialize list elements
+data = [[cntneg, 'Negative'], [cntneu, 'Neutral'], [cntp, 'Positive']]
+  
+# Create the pandas DataFrame with column name is provided explicitly
+df = pd.DataFrame(data, columns=['Count','EmotionName'])
+  
+# print dataframe.
+df
+
+ax = df.plot.bar(x='EmotionName', y='Count', rot=0)
+
