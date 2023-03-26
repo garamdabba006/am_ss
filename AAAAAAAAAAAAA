@@ -1,0 +1,1158 @@
+*** HDFS Commands ***
+=====================
+
+*** must be root for this
+su root >> 1
+
+*** version
+yarn version
+hdfs version
+hadoop version (deprecated)
+
+*** mkdir
+hdfs dfs -mkdir /myhdfs >> 2
+#browse hdfs folder
+
+*** copy from local to hdfs
+hdfs dfs -put /home/cloudera/myfiles/datafile.txt  /myhdfs/datafile.txt >> 3
+hdfs dfs -put /home/cloudera/myfiles/datafile.txt  /myhdfs/testfile.txt   
+hdfs dfs -ls  /myhdfs   >> 4
+#browse hdfs folder
+
+*** copy from hdfs to local
+hdfs dfs -get /myhdfs/datafile.txt /home/cloudera/myfiles/testfile.txt   >> 5
+hdfs dfs -ls  /myhdfs   
+#browse hdfs folder
+ls /home/cloudera/myfiles/
+cat /home/cloudera/myfiles/testfile.txt
+
+*** copy from hdfs to hdfs
+hdfs dfs -cp  /myhdfs/datafile.txt /myhdfs/newfile.txt >> 6
+#browse hdfs folder
+
+*** move from hdfs to hdfs
+hdfs dfs -mv  /myhdfs/newfile.txt  /myhdfs/oldfile.txt >> 7
+#browse hdfs folder
+
+*** copy from hdfs to hdfs
+hdfs dfs -cp  /myhdfs/datafile.txt /myhdfs/newfile.txt
+hdfs dfs -cp  /myhdfs/datafile.txt /myhdfs/testfile.txt
+hdfs dfs -cp  /myhdfs/datafile.txt /myhdfs/delfile.txt
+#browse hdfs folder ... check block size
+
+*** hdfs ls / ll#
+hdfs dfs -ls  /myhdfs   
+hdfs dfs -ll  /myhdfs   
+
+*** hdfs ls / du
+hdfs dfs -ls  /myhdfs 
+hdfs dfs -du  /myhdfs 
+hdfs dfs -du -h /myhdfs
+#note - difference between ls & du
+
+*** hdfs df
+hdfs dfs -df  /myhdfs
+
+*** delete file
+hdfs dfs -rm  /myhdfs/delfile.txt
+hdfs dfs -ls
+#browse hdfs folder
+
+*** rmdir
+hdfs dfs -mkdir /myhdfs/junk
+hdfs dfs -cp  /myhdfs/datafile.txt /myhdfs/junk/datafile.txt
+hdfs dfs -rm -r /myhdfs/junk	# cautions >> 9
+#browse hdfs folder
+
+*** cat file
+hdfs dfs -cat /myhdfs/datafile.txt >> 8
+
+*** head# / tail
+hdfs dfs -head /myhdfs/datafile.txt
+hdfs dfs -tail /myhdfs/datafile.txt
+
+*** chmod
+hdfs dfs -ls
+hdfs dfs -chmod 777 /myhdfs/datafile.txt
+hdfs dfs -ls
+hdfs dfs -chmod 644 /myhdfs/datafile.txt
+hdfs dfs -ls
+
+*** help
+hdfs dfs -help
+
+*** HDFS DFSADMIN
+hdfs dfsadmin -report
+hdfs fsck /myhdfs
+
+
+
+*** Pig Commands - Interactive Mode***
+======================================
+
+*** subscriber - count bytes exercise ***
+*** =====================================
+  
+### start pig interative mode
+pig >> 1
+Grunt>
+### quit pig interative mode
+quit
+### clear screen
+clear
+### command history
+history
+### clear pig memory
+quit
+### pig version (from linux prompt)
+pig -version
+  
+### hdfs commands
+su root
+hdfs dfs -mkdir /mypig
+hdfs dfs -mkdir /mypig/subscriber
+hdfs dfs -mkdir /mypig/subscriber/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-subscriber.txt  /mypig/subscriber/input
+
+### pig commands
+### sum bytes of Subscriber 
+A = load '/mypig/subscriber/input' as (line:chararray); >> 2
+B = foreach A generate (chararray)SUBSTRING(line,14,26) as id , (double)SUBSTRING(line,87,97) as bytes; >> 3
+C = group B by id;
+D = foreach C generate group, SUM(B.bytes);
+dump D; >> 4
+store D into '/mypig/subscriber/output'; 
+
+### pig commands
+### sum bytes of subscriber & sort by download bytes 
+A = load '/mypig/subscriber/input' as (line:chararray);
+B = foreach A generate (chararray)SUBSTRING(line,14,26) as id , (double)SUBSTRING(line,87,97) as bytes;
+C = group B by id;
+D = foreach C generate group, SUM(B.bytes);
+E = foreach D generate $1 as bytes, $0 as id; 
+F = order E by bytes desc;
+dump F;
+store F into '/mypig/subscriber/outputsorted'; 
+
+*** subscriber - count bytes exercise - extension ***
+*** =================================================
+1.	Find how many times subscriber has connected.
+2.	Find Average Bytes for each Subscriber
+3.	Find Max Bytes for each Subscriber
+4.	Find Min Bytes for each Subscriber
+
+*** customer - read csv & write csv exercise ***
+*** ============================================
+### hdfs commands
+su root
+hdfs dfs -mkdir /mypig
+hdfs dfs -mkdir /mypig/customer
+hdfs dfs -mkdir /mypig/customer/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-customer.csv  /mypig/customer/input
+### pig commands
+CustFile = load '/mypig/customer/input' using PigStorage(',') as ( CustId:int, FirstName:chararray, LastName:chararray, Phone:chararray, City:chararray );
+dump CustFile;
+store CustFile into '/mypig/customer/output' using PigStorage(','); >> 5
+
+*** customer - read tsv & write csv exercise ***
+*** ============================================
+hdfs dfs -rm -r /mypig/customer
+hdfs dfs -mkdir /mypig/customer
+hdfs dfs -mkdir /mypig/customer/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-customer.tsv  /mypig/customer/input
+### pig commands
+CustFile = load '/mypig/customer/input' using PigStorage('\t') as ( CustId:int, FirstName:chararray, LastName:chararray, Phone:chararray, City:chararray );
+dump CustFile;
+store CustFile into '/mypig/customer/output' using PigStorage(','); 
+
+*** customer - read csv & process csv exercise ***
+*** ============================================
+### hdfs commands
+su root
+hdfs dfs -mkdir /mypig
+hdfs dfs -mkdir /mypig/hr-data
+hdfs dfs -mkdir /mypig/hr-data/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-hr-data.csv  /mypig/hr-data/input
+### pig commands
+HRData = load '/mypig/hr-data/input' using PigStorage(',') as ( EmpId:int, Name:chararray, Gender:chararray, Office:chararray, Salary:float );
+HROffGrp = group HRData by Office;
+HROffGrpSum = foreach HROffGrp generate group, SUM(HRData.Salary);
+dump HROffGrpSum
+#store HROffGrpSum into '/mypig/hr-data/offsum' using PigStorage(','); 
+HRGenGrp = group HRData by Gender;
+HRGenGrpSum = foreach HRGenGrp generate group, SUM(HRData.Salary);
+dump HRGenGrpSum
+#store HRGenGrpSum into '/mypig/hr-data/gensum' using PigStorage(','); 
+
+*** pig test data - word count exercise ***
+*** =======================================
+
+### hdfs commands
+su root
+hdfs dfs -mkdir /mypig
+hdfs dfs -mkdir /mypig/wordcount
+hdfs dfs -mkdir /mypig/wordcount/input
+hdfs dfs -put   /home/cloudera/myfiles/datafile.txt  /mypig/wordcount/input
+
+### pig commands
+### word count 
+fileLines = load '/mypig/wordcount/input' as (line:chararray);
+fileTokens = foreach fileLines generate TOKENIZE(line) as tokens;
+fileWords = foreach fileTokens generate flatten(tokens) as words;
+groupWords = group fileWords by words;
+countWords = foreach groupWords generate group, COUNT(fileWords);
+sortedCount = order countWords by $1 desc, $0;
+dump sortedCount;
+
+
+*** customer - read csv & hr-office join exercise ***
+*** =================================================
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/hr-data
+hdfs dfs -mkdir /mypig/hr-data
+hdfs dfs -mkdir /mypig/hr-data/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-hr-data.csv  /mypig/hr-data/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-hr-office.csv  /mypig/hr-data/input
+### pig commands
+HRData = load '/mypig/hr-data/input/pig-hr-data.csv' using PigStorage(',') as ( EmpId:int, Name:chararray, Gender:chararray, Office:chararray, Salary:float );
+HROffice = load '/mypig/hr-data/input/pig-hr-office.csv' using PigStorage(',') as ( Office:chararray, City:chararray );
+HRJoined = JOIN HRData BY Office LEFT OUTER, HROffice BY Office;
+dump HRJoined;
+
+
+*** merge catalog-1 & catalog-2 exercise ***
+*** ===================================================
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/catalog
+hdfs dfs -mkdir /mypig/catalog
+hdfs dfs -mkdir /mypig/catalog/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-catalog1.csv  /mypig/catalog/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-catalog2.csv  /mypig/catalog/input
+### pig commands
+catalog1 = load '/mypig/catalog/input/pig-catalog1.csv' using PigStorage(',') as ( title:chararray, artis:chararray, country:chararray, company:chararray, price:float, year:int );
+catalog2 = load '/mypig/catalog/input/pig-catalog2.csv' using PigStorage(',') as ( title:chararray, artis:chararray, country:chararray, company:chararray, price:float, year:int );
+catalog = UNION catalog1, catalog2;
+dump catalog;
+
+
+*** split students based exercise ***
+*** ===================================================
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/students
+hdfs dfs -mkdir /mypig/students
+hdfs dfs -mkdir /mypig/students/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-students.csv  /mypig/students/input
+### pig commands
+students = load '/mypig/students/input/pig-students.csv' using PigStorage(',') as (id:int, firstname:chararray, lastname:chararray, age:int, phone:chararray, city:chararray); 
+SPLIT students into students1 if age<23, students2 if (age>=23);
+dump students1;
+dump students2;
+
+
+*** UPPER / LOWER students based exercise ***
+*** ===================================================
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/students
+hdfs dfs -mkdir /mypig/students
+hdfs dfs -mkdir /mypig/students/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-students.csv  /mypig/students/input
+### pig commands
+students = load '/mypig/students/input/pig-students.csv' using PigStorage(',') as (id:int, firstname:chararray, lastname:chararray, age:int, phone:chararray, city:chararray); 
+uppstudents = FOREACH students GENERATE (id,firstname,lastname), UPPER(firstname), UPPER(lastname);
+dump uppstudents;
+lowstudents = FOREACH students GENERATE (id,firstname,lastname), LOWER(firstname), LOWER(lastname);
+dump lowstudents;
+
+
+*** FILTER students based exercise ***
+*** ===================================================
+/*
+In the filter conditions use:
+logical operators (NOT, AND, OR) 
+and 
+relational operators (< , >, ==, !=, >=, <= ) 
+use brackets to clearly demark the conditions
+Note
+Do not compare null data using ==,!= operators. This will result in no output as pig considers null as nothing, as nothing cannot be compared to anything.
+Use [ <column_name> IS NULL ] instead of [ <column_name> == NULL ] and [ <column_name> IS NOT NULL ] instead of [ <column_name> != NULL ]
+*/
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/students
+hdfs dfs -mkdir /mypig/students
+hdfs dfs -mkdir /mypig/students/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-students.csv  /mypig/students/input
+### pig commands
+students = load '/mypig/students/input/pig-students.csv' using PigStorage(',') as (id:int, firstname:chararray, lastname:chararray, age:int, phone:chararray, city:chararray); 
+fltstudents = FILTER students BY (city == 'Delhi');
+dump fltstudents;
+fltstudents = FILTER students BY (city == 'Delhi ');
+dump fltstudents;
+fltstudents = FILTER students BY (city == 'Chennai');
+dump fltstudents;
+fltstudents = FILTER students BY (city == 'Chennai ');
+dump fltstudents;
+
+
+*** REPLACE students based exercise ***
+*** ===================================================
+/*
+In the filter conditions use:
+logical operators (NOT, AND, OR) 
+and 
+relational operators (< , >, ==, !=, >=, <= ) 
+use brackets to clearly demark the conditions
+Note
+Do not compare null data using ==,!= operators. This will result in no output as pig considers null as nothing, as nothing cannot be compared to anything.
+Use [ <column_name> IS NULL ] instead of [ <column_name> == NULL ] and [ <column_name> IS NOT NULL ] instead of [ <column_name> != NULL ]
+*/
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/students
+hdfs dfs -mkdir /mypig/students
+hdfs dfs -mkdir /mypig/students/input
+hdfs dfs -put   /home/cloudera/myfiles/pig-students.csv  /mypig/students/input
+### pig commands
+students = load '/mypig/students/input/pig-students.csv' using PigStorage(',') as (id:int, firstname:chararray, lastname:chararray, age:int, phone:chararray, city:chararray); 
+repl_students = FOREACH students GENERATE (id,firstname,lastname,age,phone,REPLACE(city,'Delhi ','New Delhi'));
+
+dump repl_students
+
+*** REPLACE & FILTER word count based exercise ***
+*** ===================================================
+### hdfs commands
+su root
+hdfs dfs -rm -r /mypig/wordcount
+hdfs dfs -mkdir /mypig/wordcount
+hdfs dfs -mkdir /mypig/wordcount/input
+hdfs dfs -put   /home/cloudera/myfiles/datafile.txt  /mypig/wordcount/input
+### pig commands
+fileLines = load '/mypig/wordcount/input' as (line:chararray);
+fileWords = FOREACH fileLines GENERATE FLATTEN(TOKENIZE(REPLACE(LOWER(TRIM(line)),'(\\\'[\\w\\d\\s]+\\\')', ''))) AS words;
+groupWords = group fileWords by words;
+countWords = foreach groupWords generate group, COUNT(fileWords) as count;
+sortedWords = order countWords by count DESC;
+dump sortedWords;
+filtWords = filter sortedWords by (group == 'data' OR group == 'junk');
+dump A11;
+--store sortedWords into '/mypig/wordcount/output';
+
+
+*** Pig Commands - Command Line Mode***
+=======================================
+
+### pig commands on condition
+### command line mode 
+### =================================================
+### hdfs commands
+hdfs dfs -rm /mypig/wordcount/output
+### pig commands from linux prompt
+cd  /home/cloudera/mycommands
+pig pig-wc.pig
+
+
+### pig commands
+### command line mode 
+### =================================================
+### hdfs commands
+hdfs dfs -rm /mypig/wordcount/output
+### pig commands from grunt shell
+grunt> run /home/cloudera/mycommands/pig-wc.pig
+
+
+xa*** Hive Commands ***
+=====================
+### version
+hive --version
+beeline --version
+
+### start
+hive >> 1
+beeline -u jdbc:hive2://
+
+### quit
+quit
+!quit
+
+### intro
+show databases; use <db-name>; show tables; desc <table-name>;
+DDL - create table, create view, create index
+DML - select, where, group by, order by, joins
+
+### databases / tables
+show databases;
+use default;
+show tables;
+
+### databases hr - data loaded from local-fs & stored in hive warehouse
+### simple / basic queries 
+### understand what runs as mr-jobs
+create database hr; >> 2
+use hr; >> 3
+create table employee (emp_id string, emp_name string, salary float, status int) row format delimited fields terminated by ',' lines terminated by '\n'; >> 4
+
+load data local inpath '/home/cloudera/myfiles/hive-employee.csv' overwrite into table employee; 
+
+LOAD DATA inpath 'hdfs:///myproject/output' OVERWRITE INTO TABLE insurance;
+
+desc employee;
+select * from employee;
+select * from employee where salary >= 5000;
+select * from employee where salary = 2000;
+select * from employee where emp_name like 'cyrus';
+select * from employee where emp_name like 'cyrus%';
+select * from employee where emp_name like 'Cyrus%';
+select * from employee where emp_name like '%ta%';
+select * from employee order by emp_name;  #note - run as mr-job
+select count(*) from employee; #note - run as mr-job
+select count(*) from employee where salary = 2000; #note - run as mr-job
+select salary, count(*) from employee group by salary;
+select salary, sum(salary) as sumsal from employee group by salary;
+select max(salary) as maxsal, min(salary) as minsal from employee;
+EXPLAIN select salary, count(*) from employee group by salary;
+
+### export table to hdfs
+export table employee to '/myhdfs/emp-check';
+
+### databases hr - hrdata loaded from local-fs & stored in hive warehouse
+### simple / basic queries 
+### practice
+create table hrdata (empid int, name string, gender string, office string, salary float ) row format delimited fields terminated by ',' lines terminated by '\n';
+load data local inpath '/home/cloudera/myfiles//pig-hr-data.csv' overwrite into table hrdata; 
+# show all records
+# show all records of Males
+# show all records office is North
+# count all records 
+# print min, max & sum of salary 
+# show count & salary sum of genders
+# show count & salary sum of office
+
+### databases sales - data loaded from local-fs & stored in hive warehouse
+### important join queries 
+### understand what runs as mr-jobs
+create database sales;
+use sales;
+create table sales (name string, itemid int) row format delimited fields terminated by ',';
+create table items (itemid int, itemname string) row format delimited fields terminated by ',';
+load data local inpath '/home/cloudera/myfiles/hive-sales.csv' into table sales;
+load data local inpath '/home/cloudera/myfiles/hive-items.csv' into table items;
+desc sales;
+desc items;
+select sales.*, items.* from sales join items on (sales.itemid = items.itemid);
+select sales.*, items.* from sales LEFT OUTER JOIN items on (sales.itemid = items.itemid);
+select sales.*, items.* from sales RIGHT OUTER JOIN items on (sales.itemid = items.itemid);
+select sales.*, items.* from sales FULL OUTER JOIN items on (sales.itemid = items.itemid);
+
+### use database hr & table hrdata and join it with hr office
+use hr;
+create table hroffice (office string, city string) row format delimited fields terminated by ',';
+load data local inpath '/home/cloudera/myfiles/pig-hr-office.csv' overwrite into table hroffice; 
+select hrdata.*, hroffice.city from hrdata LEFT OUTER JOIN hroffice on (hrdata.office = hroffice.office);
+
+### create new tables from query results
+use sales;
+# option a - create table as normal & use insert into table 
+create table sales_item1 (name string, itemid int, itemname string) row format delimited fields terminated by ',';
+insert into table sales_item1 select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+insert overwrite into table sales_item1 select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+# option b - create table  
+create table sales_item2 as select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+# option b very dangerous; best not to use
+
+### create csv files / tab deli files from query results
+# write to local directory with default fields sep '^A' line sep '\n'
+insert overwrite local directory '/home/cloudera/myfiles/sales-folder' select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+# write to local directory with tab deli fields line sep '\n'
+insert overwrite local directory '/home/cloudera/myfiles/sales-folder' row format delimited fields terminated by '\t' escaped by '"' lines terminated by '\n' stored as textfile select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+# write to local directory with csv format line sep '\n'
+insert overwrite local directory '/home/cloudera/myfiles/sales-folder' row format delimited fields terminated by ',' escaped by '"' lines terminated by '\n' stored as textfile select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+# write to hdfs directory - no local & specify hdfs folder .... rest remains same
+insert overwrite directory '/myhdfs/sales-folder' select sales.name, items.* from sales join items on (sales.itemid = items.itemid);
+
+### understand
+# where data is stored in hive warehouse
+# /user/hive/warehouse
+# check sales.db
+# check hr.db
+
+### databases cars - data loaded from hdfs & stored in hive warehouse
+### understand hive warehouse tables & externale tables
+### first hive warehouse table
+hdfs dfs -mkdir /hive
+hdfs dfs -mkdir /hive/cars
+hdfs dfs -put /home/cloudera/myfiles/hive-cars.csv /hive/cars
+#cols - name,mpg,cyl,disp,hp,wt,gear,carb
+create database cars1;
+use cars1;
+create table cars (name string, mpg float, cyl int, disp float, hp int, wt float, gear int, carb int) row format delimited fields terminated by ',';
+load data inpath '/hive/cars/hive-cars.csv' into table cars;
+select * from cars;
+desc cars
+
+### understand
+# where data is stored in hdfs
+# /hive/cars            - # why is hive-cars.db not present?
+# /user/hive/warehouse  - # cars1.db - entire data available
+
+### now external table
+hdfs dfs -put /home/cloudera/myfiles/hive-cars.csv /hive/cars
+#cols - name,mpg,cyl,disp,hp,wt,gear,carb
+create database cars2;
+use cars2;
+create external table cars (name string, mpg float, cyl int, disp float, hp int, wt float, gear int, carb int) row format delimited fields terminated by ',' location '/hive/cars';
+#note - hdfs folder & not file to be spcified ... no need to load data
+select * from cars;
+desc cars
+
+### understand
+# where data is stored in hdfs
+# /hive/cars            - hive-cars.csv present?
+# /user/hive/warehouse  - cars2.db empty
+
+### hive meta store
+CDH4 $ mysql -uroot 
+CDH5 $ mysql -uroot -pcloudera 
+show databases;
+use metastore;
+select * from DBS;
+select * from TBLS;
+
+### databases hr - alter table
+use hr;
+#create table employee (emp_id string, emp_name string, salary float, status int) row format delimited fields terminated by ',' lines terminated by '\n';
+show tables;
+desc employee;
+# rename table name
+alter table employee rename to emp_data;
+show tables;
+desc emp_data;
+# add columns
+alter table emp_data add columns (age int, mob_numb string);
+desc emp_data;
+# drop columns or rather retain cols
+alter table emp_data replace columns (emp_id string, emp_name string, salary float, status int, mob_numb string);
+desc emp_data;
+# change column names
+# ALTER TABLE name CHANGE column_name new_name new_type
+alter table emp_data change mob_numb mobile string;
+desc emp_data;
+
+
+### insert / update / delete
+Here is what you can find in the official documentation:
+Hadoop is a batch processing system and Hadoop jobs tend to have high latency and incur substantial overheads in job submission and scheduling. As a result latency for Hive queries is generally very high (minutes) even when data sets involved are very small (say a few hundred megabytes). As a result it cannot be compared with systems such as Oracle where analyses are conducted on a significantly smaller amount of data but the analyses proceed much more iteratively with the response times between iterations being less than a few minutes. Hive aims to provide acceptable (but not optimal) latency for interactive data browsing, queries over small data sets or test queries.
+Hive is not designed for online transaction processing and does not offer real-time queries and row level updates. It is best used for batch jobs over large sets of immutable data (like web logs).
+Hive 0.14 onwards, if a table is to be used in ACID writes (insert, update, delete) then the table property "transactional" must be set on that table. Without this value, inserts will be done in the old style; updates and deletes will be prohibited.
+
+
+### insert / update / delete
+use sales;
+show tables;
+#drop table sales;
+#create table sales (name string, itemid int) row format delimited fields terminated by ',' TBLPROPERTIES ('transactional'='true');
+#load data local inpath '/home/cloudera/myfiles/hive-sales.csv' into table sales;
+
+### insert rows
+# columns "name", "itemid"
+insert into table sales values ("Chin",5);
+insert into table sales values ("Xhin",5),("Foo",4);
+
+### update rows ### for 1.14 or higher version
+# columns "name", "itemid"
+update sales set name="Fool" where name="Foo";
+update sales set name="Fool" where itemid="4";
+
+### delete rows ### for 1.14 higher version
+# columns "name", "itemid"
+delete from sales where name="Fool";
+delete from sales where itemid=10;
+
+### databases hr - drop table / drop db
+use hr;
+#create table employee (emp_id string, emp_name string, salary float, status int) row format delimited fields terminated by ',' lines terminated by '\n';
+show tables;
+drop table emp_data;
+show tables;
+use default;
+show databases;
+drop database hr;
+show databases;
+
+### outside of hive shell
+# run hive commands from command line
+hive -e "use sales; select * from sales limit 10;"
+beeline -u jdbc:hive2://  -e "use sales; select * from sales limit 10;"
+# run hive script from command line
+hive -f hive-script.sql
+beeline -u jdbc:hive2://  -f hive-script.sql
+hive -f /home/cloudera/mycommands/hive-script.sql
+beeline -u jdbc:hive2://  -f /home/cloudera/mycommands/hive-script.sql
+
+### hive functions
+count(*)
+min(double a)
+max(double a)
+sum(double a)
+avg(double a)
+round(double a)	
+floor(double a)	
+ceil(double a)	
+concat(string A, string B,...)	
+substr(string A, int start, int length)	
+upper(string A)	
+ucase(string A)	
+lower(string A)	
+lcase(string A)	
+trim(string A)
+ltrim(string A)
+rtrim(string A)
+use hr;
+select name from hrdata;
+select lower(name) from hrdata;
+select substr(name,3,1) from hrdata;natio
+select substr(name,3,1) from hrdata;
+use hr;
+select count(*) from emp_data; #note - run as mr-job
+select count(*) from emp_data where salary = 2000; #note - run as mr-job
+select salary, count(*) from emp_data group by salary;
+select salary, sum(salary) as sumsal from emp_data group by salary;
+select max(salary) as maxsal, min(salary) as minsal from emp_data;
+
+
+### hive partition
+#
+create database states;
+use states;
+create table states (state STRING, dept STRING, empcount INT) row format delimited fields terminated by ',' lines terminated by '\n';
+load data local inpath '/home/cloudera/myfiles/hive-part.csv' overwrite into table states; 
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+create table states_part(dept string, empcount string) partitioned by (state string);
+insert overwrite table states_part partition(state) select dept, empcount, state from  states;
+select * from state_part;
+select * from State_part where state = 'Bihar';
+
+### hive buckets
+create database employee;
+use employee;
+create table employee (empid string, empname string, salary float, country string) row format delimited fields terminated by ',' lines terminated by '\n';
+load data local inpath '/home/cloudera/myfiles/employees.csv' overwrite into table employee;
+create table employee_bucket (empid string, empname string, salary float, country string) clustered by (empid) into 3 buckets;
+insert overwrite table employee_bucket select * from employee;
+select * from employee_bucket;
+desc employee_bucket;
+
+
+
+*** assignment - nifty ***
+==========================
+create table 
+load data local inpath 
+select * 
+show all rows with highest HighPrice for each script
+show all rows with lowest LowPrice for each script
+show all Volatility Index for each row [ Volatility Index = (HighPrice - LowPrice) / ((HighPrice + LowPrice)/2) ]
+show all Highest Volatility Index for each script [ Volatility Index = (HighPrice - LowPrice) / ((HighPrice + LowPrice)/2) ]
+
+create database nifty;
+use nifty;
+create table nifty (date string, mkt string, series string, symbol string, security string, prevclose float, openprice float, highprice float, lowprice float, closeprice float, tradevalue float, tradeqty float) row format delimited fields terminated by ',' lines terminated by '\n';
+load data local inpath '/home/cloudera/myfiles/hive-nifty.csv' overwrite into table nifty; 
+select security, max(closeprice) as maxcloseprice from nifty group by security;
+select security, min(closeprice) as mincloseprice from nifty group by security;
+select security, avg(closeprice) as avgcloseprice from nifty group by security;
+select * from (select security, max(closeprice) as closeprice from nifty group by security) as x inner join nifty as n on n.security = x.security and n.closeprice = x.closeprice;
+#select security, count(closeprice) over (partition by security order by security) from nifty;
+
+
+*** Sqoop Commands ***
+======================
+
+# start
+n/a
+mysql -u root -p
+# stop
+n/a
+
+# help
+linux>
+sqoop help import
+sqoop help export
+
+# show databases
+linux>
+sqoop list-databases --connect jdbc:mysql://localhost --username root --password cloudera
+
+# show tables
+linux>
+sqoop list-tables --connect jdbc:mysql://localhost/nifty --username root -P
+
+# import data ... read from mysql & store to hdfs -- check map reduce job
+linux>
+sqoop import --connect jdbc:mysql://localhost/nifty --username root -P --table nifty --m 1 --target-dir /myhdfs/nifty
+sqoop import --connect jdbc:mysql://localhost/nifty --username root -P --table nifty --m 1 --target-dir /myhdfs/nifty-20141201 --where "date ='2014-12-01'"
+
+# import data ... read from mysql & store to hive -- check map reduce job
+hive > 
+create database nifty;
+linux>
+sqoop import --connect jdbc:mysql://localhost/nifty --username root -P --table nifty --hive-import --hive-table nifty.nifty  --m 1
+
+# export data ... read from hdfs & store to mysql -- check map reduce job
+linux> 
+hdfs dfs -mkdir /myhdfs/employee
+hdfs dfs -put   /home/cloudera/myfiles/hive-employee.csv /myhdfs/employee
+mysql>
+create database employee; #(if db does not exists)
+use employee; 
+create table new_emp (emp_id VARCHAR(10), emp_name VARCHAR(50), salary FLOAT, status INT);
+linux>
+sqoop export --connect jdbc:mysql://localhost/employee --username root -P --table new_emp --export-dir /myhdfs/employee --input-fields-terminated-by ',' --lines-terminated-by '\n'
+
+# export data ... read from hive & store to mysql -- check map reduce job
+# hive data resides in HDFS at /user/hive/warehouse/tableName; 
+# important - as the field delimiter mostly ',' is used, however at times hive uses '\01' i.e. '^A'; so check before command is fired 
+# important - mostly '\n' as the line terminator; so check before command is fired
+
+# confirm following
+linux>
+hdfs dfs -ls /user/hive/warehouse/hr.db/hrdata
+hdfs dfs -cat /user/hive/warehouse/hr.db/hrdata/pig-hr-data.csv
+mysql>
+create database hr; #(if db does not exists)
+use hr;
+create table hrdata (empid int, name varchar(30), gender char(1), office char(1), salary float); 
+linux>
+sqoop export --connect jdbc:mysql://localhost/hr --username root -P --table hrdata --export-dir /user/hive/warehouse/hr.db/hrdata/pig-hr-data.csv --input-fields-terminated-by ',' --lines-terminated-by '\n'
+
+# export data
+check out '--hcatalog-database' and '--hcatalog-table
+
+8 V’s of Big Data:
+Big data refers to massive volume of data that can be structured, unstructured, semi-structured or  quasi-structured that is collected by organisations and individuals. This data is too large and complex to be processed by traditional data processing methods, and requires specialised tools and techniques to store, manage, process and analyse it.
+
+The sheer volume, velocity and variety of big data makes it difficult to process but is important for the organisation.
+Big Data Is An Evolving Term That Describes Any Voluminous Amount Of Structured, Semi-structured And Unstructured Data That Has The Potential To Be Mined For Information.
+The 8 V’s of big data are:
+1.	Extreme Volume of Data
+2.	Wide Variety of Data
+3.	Velocity at which the data is generated- where vast amounts of data are generated in real-time and require fast processing to extract value from it. 
+4.	Veracity or Uncertainty of data- Veracity of data refers to the accuracy, truthfulness, and reliability of data.Veracity of data can be impacted by factors such as data quality, data completeness, data consistency, and data bias. Critical
+5.	Value of data- Worth or usefulness of data, insights
+6.	Visualisation-to make sense of the data
+7.	Viscosity-It refers to the degree of difficulty or complexity involved in moving, transforming, or integrating data within an organization. High data viscosity can result from factors such as poor data quality, lack of data standardization, and the absence of efficient data management processes. 
+8.	Virality- Virality of data refers to the rapid spread or replication of data through a network or system. It refers to the speed at which data is shared, reproduced, and circulated among a group of people, organizations, or systems. Virality of data can be influenced by a variety of factors, including the quality of the data, the appeal of the content, and the ease of sharing and replicating the data. 
+
+Every minute of the day: 3.67M YouTube video watched, 231M emails sent, 5.9 google searches, 16.2 M text sent
+
+KEY ENABLERS:
+1.	Availability of data
+2.	Increase in processing power
+3.	Increase in storage capabilities
+
+CHALLENGES:
+Problem is not getting the data, problem is to : store, process, analyse data:
+
+SOLUTION: HADOOP
+
+Introduced by Google was GFS (Google File System) and Map Reduce
+Then Hadoop became open source covering both HDFS & MR
+Hadoop is owned by Apache 
+Hadoop is used by Facebook, Yahoo, Google, Twitter, LinkedIn, Rackspace
+
+
+an open, source framework of software ,for storage & large, scale processing 
+of massive data, sets on clusters of commodity hardware
+
+Hadoop As The Solution
+Storage- Hadoop Distributed File System
+Process-Map Reduce Paradigm
+Analyse -Hive, Pig, Impala, etc
+
+
+BIG DATA CASE STUDY:
+
+AMAZON:
+Volume- user data, name, details, login details, email id for million of users- Big data
+Velocity- every sec/milli second someone buys a product on amazon
+Variety- amazon photo: unstructured data
+Varacity- trust worthy:
+Value- extracting value- Recommendation
+
+HDFS Architechture
+HDFS (Hadoop Distributed File System) is the underlying file system of Hadoop. It is a distributed file system designed to store large data sets across multiple commodity servers, providing high throughput access to this data.
+· Individual files are broken into blocks of fixed size (typically 256 MB blocks)
+· Stored across cluster of nodes (not necessarily on same machine)
+· These files can be more than the size of individual machine’s hard drive
+· So access to a file requires cooperation of several nodes
+Design Challenges
+· System expects large files for processing ; small number of very large files would be stored
+· Several machines involved in storing a file, loss of machine should be handled
+· Block size to be important consideration, this is to keep smaller metadata at the node for each file
+The HDFS architecture consists of:
+1)	NameNode: It is the master node in HDFS. The NameNode is the central component in HDFS and holds a crucial role. It oversees the management of the file system namespace and is responsible for allocating blocks of data to DataNodes. Additionally, the NameNode stores metadata information about the files and directories in the HDFS file system, including the size of the files, the block size, and the location of the blocks. Function of name node is very critical for overall health of HDFS. In case of a DataNode failure, the NameNode can automatically copy the blocks to another node to guarantee data accessibility.
+2)	DataNode: The slave nodes that store the actual data blocks. It knows only about the data stored on it and will read data and send to client when retrieval requested. It will receive data and store locally when storage is requested. DataNode is a component responsible for storing the actual data blocks of files in a distributed manner across multiple nodes. Reads, sends, receives and stores data when requested. The DataNodes regularly send heartbeat messages to the NameNode to indicate their operational status. The NameNode maintains a record of the DataNodes holding the blocks of a file and clients can retrieve the data by connecting directly to the relevant DataNode.
+3)	Secondary NameNode: Helper of the name node, performs periodic checkpoints of the file system namespace. the Secondary NameNode periodically merges this edit log with the fsimage file to create a new, up-to-date checkpoint of the namespace. This helps to reduce the size of the edit log.  It also communicates with the name node to take snapshot of the HDFS metadata and minimises downtime and loss of data.
+4)	Client: The HDFS client is crucial for the functioning of the HDFS system as it enables users and applications to access the data stored in the cluster. It communicates with the NameNode to determine the location of data within the cluster and retrieves or stores the data from or to the relevant DataNodes. The client plays an important role by making requests to the HDFS cluster for reading or writing data.
+The HDFS architecture also includes a few other components, such as:
+1. Block: HDFS divides the data into smaller blocks and stores each block on different DataNodes in the cluster. By default, the block size is 128 MB, but it can be configured based on the needs of the application.
+2. Rack: A rack is a collection of DataNodes that are located in the same physical location, typically a single rack or switch.
+3. Replica: HDFS stores multiple copies of each block in different DataNodes in the cluster. The number of replicas can be configured by the administrator.
+Overall, the HDFS architecture is designed to provide high fault tolerance, high availability, and scalability for large-scale distributed data processing.
+HDFS READ:
+
+1)	 First step is to interact with the name node and second step is to directly go to the data node and read the files, this reading is parallel.
+2)	There are different users so name node is required.
+
+In HDFS, a file is divided into multiple blocks and stored across multiple DataNodes for reliability and scalability and it follows a write one read many times model.
+
+4.	OPEN:The HDF client reads the file by opening it through the file system object by calling the open() function.
+5.	The Distributed File System (DFS) then communicates with the name node using Remote Procedure Calls (RPCs) to determine the location of the first few blocks in the file.
+6.	The name node identifies and returns the addresses of the data nodes that hold copies of those blocks.
+7.	The DFS returns an FS Data Input Stream to the client, which the client uses to read data.
+8.	The FS Data Input Stream wraps a DFS Input Stream which manages the communication between the data node and the name node.
+9.	The client then calls the read() function on the stream, the FS Data Input Stream connects to the primary data node and the closest data node for the primary block in the file. 
+10.	Data is streamed from the data node back to the client.
+11.	When the end of the block is reached, the FS Data Input Stream closes the connection to the data node and finds the best data node for the next block
+12.	Finally, when the client finishes reading, the close() function is called on the FS Data Input Stream.
+
+HDFS WRITE:
+
+In HDFS, writes are expensive and slow because they require multiple replicas of the data to be created, stored and acknowledged. This design choice was made to ensure data reliability and availability in the event of node failure.
+
+1)	In the Distributed File System (DFS) the client creates file by calling create() 
+2)	DFS sends an RPC call to the name node to create a new file in the file system's namespace, with no blocks allocated.
+3)	The name node performs various checks to ensure the file doesn't already exist and that the client has the proper permission to create it.
+4)	If the checks pass, the file is created, otherwise an error is thrown.
+5)	The DFS output stream splits the data into packets, and the data streamer is responsible for asking the name node to allocate a new block by selecting a suitable set of data nodes to store replicas.
+6)	A pipeline of data nodes is formed, with the data streamer streaming the packets to the primary data node, which stores each packet and forwards it to the second data node. This process continues through the pipeline, with each data node storing and forwarding the packet to the next.
+7)	The DFS output stream maintains an internal queue called the 'ack queue' for packets that are waiting to be acknowledged by the data nodes. 
+8)	Once all remaining packets are sent to the data node pipeline and acknowledged, the output stream signals completion to the name node.
+9)	
+In HDFS, data is stored in a redundant manner across multiple DataNodes to ensure reliability and availability. The NameNode is responsible for ensuring that data is available even in the case of a node failure by replicating blocks across the cluster.
+What is MAP REDUCE with Example
+MapReduce is a programming model and an associated implementation for processing and generating large data sets with a parallel, distributed algorithm on a cluster.
+In MapReduce, the data is first divided into smaller chunks, and then a map function is applied to each chunk in parallel, transforming the data into intermediate key-value pairs. These intermediate pairs are then sorted and grouped by key, and a reduce function is applied to each group, aggregating the values into a final output.
+####:
+It is a massive parallel processing technique to process data. MapReduce is a programming model and an associated implementation for processing and generating large data sets with a parallel, distributed algorithm on a cluster. It is a core component of Apache Hadoop and is used to process big data sets in a distributed computing environment.
+
+The MapReduce model consists of two main functions: "Map" and “Reduce".
+
+•	Map: The map function takes in a set of data, divides it into smaller sub-sets and processes each sub-set in parallel. The map function performs a specific operation on each of the sub-sets, such as filtering, sorting, or transforming the data.
+
+•	Reduce: The reduce function takes in the output of the map function, combines and summarizes the data, and produces a final result. The reduce function performs a summary operation on the sub-sets, such as aggregating, counting, or summing the data.
+
+Suppose we have a large data set containing the employee records of IBM. The goal is to calculate the total salary drawn per department. The Map function would divide the data set into smaller sub-sets based on the departments and compute the total salary drawn for each department. The Reduce function would then summarize the data generated by the Map function and produce the final result, which is the total salary drawn for each department.
+In this example, the Map function performs the task of counting the salary for each department, and the Reduce function aggregates the results to produce the final output. The MapReduce framework takes care of the distribution of the data and parallel processing, making it possible to process big data sets efficiently.
+
+Here’s a simple example to help illustrate the process:
+Suppose we have a large dataset of text documents and we want to count the number of occurrences of each word in the documents.
+· The map function takes as input a single document and outputs a series of key-value pairs, where each pair consists of a word from the document and the value 1.
+· The reduce function takes as input a word and a list of its associated values (1s), and outputs a single key-value pair, where the key is the word and the value is the total number of occurrences of the word in the input data.
+· The MapReduce framework takes care of dividing the data into chunks, distributing the map and reduce operations to multiple machines, and combining the intermediate results into a final output.
+This example demonstrates how MapReduce can be used to perform complex data processing and aggregation tasks in a parallel and scalable manner. The model can be applied to a wide range of problems, from counting the frequency of words in text to calculating statistics on large datasets.
+MAP REDUCE STEPS
+MapReduce is a programming model for processing and generating large data sets with a parallel, distributed algorithm on a cluster. The following are the steps involved in a MapReduce job:
+STEPS: Input files, each line passed to individual mapper instances, map key value splitting, sort and shuffle, reduce key value pair , final output.
+
+Steps:
+
+1)	Split input data into independent chunks and store them in HDFS.
+2)	Schedule the job to carry out the required process.
+3)	Schedule tasks on nodes where data is already present.
+4)	Map Phase - Transformation Phase: Input data is transformed into a list of (key, value) pairs by the map function.
+5)	Sort & Shuffle - Group & Order Phase:The list of (key, value) pairs is sorted and grouped by key.
+6)	Reduce Phase - Aggregation Phase:The sorted and grouped list of (key, value) pairs is aggregated into a smaller set of outputs by the reduce function.
+7)	A manager is responsible for scheduling jobs, collating results, and updating the status.
+8)	The process and storage nodes (MR-Tasks and HDFS-DataNode) can run on the same machine.
+
+Note: These steps can be repeated several times with different functions to achieve more complex processing tasks.
+The MapReduce framework takes care of managing the distribution of data and tasks across the cluster, as well as handling failures and network communication. This allows developers to focus on writing the map and reduce functions, while the framework provides the underlying infrastructure for parallel and scalable processing.
+What is MR-V1 and its PROCESS
+
+MRv1- Map Reduce Version 1:
+
+MRv1 stands for MapReduce version 1 In MRv1, the input data is processed in parallel, with each node in the cluster processing a portion of the data. The intermediate key-value pairs produced by the map function are shuffled and sorted, and the reduce function aggregates the values associated with each key. This process allows for fast, parallel processing of large data sets across many nodes in a cluster.
+
+The components of MRv1 (MapReduce version 1) are:
+1)	In MapReduce, the Client is the entity that initiates jobs and provides the Map and Reduce functions and input/output data for the job. It communicates with the Job Tracker to start the job. 
+2)	2. The Job Tracker is the central coordinator that manages and oversees the execution of MapReduce jobs, including scheduling tasks and monitoring their progress. 
+3)	Task Trackers are the worker nodes that carry out tasks assigned by the Job Tracker and report back to it. 
+4)	The MapReduce framework has two types of tasks: Map Tasks, which process input data and produce intermediate key-value pairs, and Reduce Tasks, which aggregate the intermediate data and produce the final output.
+5)	 HDFS (Hadoop Distributed File System) is used to store the input and output data.
+
+MRv1 Process:
+· A Client invokes a Map Reduce, from a Calling Node (maybe a Data Node or an Extra Node in the cluster)
+· An instance of Job Tracker is created in the memory of the Calling Node
+· The Job Tracker queries the Name Node and finds the Data Nodes (location of the data to be used)
+· Job Tracker then launches Task Trackers in the memory of all the Data Nodes as above to run the jobs
+· Job Tracker gives the code to Task Tracker to run as a Task
+· Task Tracker is responsible for creating the tasks & running the tasks
+· In effect the Mapper of the Job is found here
+· Once the Task is completed, the result from the Tasks is sent back to the Job Tracker
+· Job Tracker also keeps a track of progress by each Task Tracker
+· The Job Tracker also receives the results from each Task Tracker and aggregates the results
+· In effect the Reducer of the Job is found here
+MR-V2 and its PROCESS
+MRv2, short for MapReduce Version 2, is a more recent implementation of the MapReduce programming model for processing and generating large data sets with a parallel, distributed algorithm on a cluster.
+MRv2, also known as YARN (Yet Another Resource Negotiator), introduced a more flexible and scalable architecture for processing large data sets. Unlike MRv1, which had a single component (the JobTracker) managing the processing, MRv2 separates the processing management into two components: the Resource Manager and the Application Master.
+The Resource Manager is responsible for allocating resources (such as CPU and memory) to running applications and managing the allocation of containers (units of processing resources). The Application Master is responsible for negotiating resources from the Resource Manager, tracking the progress of the tasks, and responding to failures.
+With MRv2, multiple applications can run on the same cluster simultaneously, each with its own Application Master. This provides improved scalability and more advanced resource management capabilities compared to MRv1.
+MRv2: MRv2 improved upon the original version by adding features such as increased scalability, improved resource management, and support for running user code more securely within the cluster. Additionally, MRv2 introduced the concept of YARN (Yet Another Resource Negotiator), a new cluster resource manager that provides centralized management and allocation of resources for all big data processing applications running on the cluster.
+
+1. The Client in MapReduce is the entity that initiates jobs and provides the Map and Reduce functions and input/output data. It communicates with the Job Tracker to start the job. 
+2. The resource manager in MRv2 is YARN (Yet Another Resource Negotiator), a centralized resource manager that improves resource management and allocation for all big data processing applications running on the cluster. 
+3. An application node refers to a node in the cluster running a big data processing application with YARN as the resource manager. 
+4. The Application Master in MRv2 is a component in YARN that serves as the intermediary between the application node and the resource manager. It negotiates resources, coordinates execution, and manages tasks. 
+5. The Task Node Manager in MRv2 is a component that runs on each node and is responsible for managing the execution of tasks. 
+6. A MR Task is a unit of work executed by Task Trackers on the Data Nodes, responsible for processing a portion of input data and generating intermediate or final results.
+MRv2 uses HDFS (Hadoop Distributed File System) to store input and output data.
+
+MRv2 Process:
+· A Client invokes a Map Reduce, from a Calling Node (maybe a Data Node or an Extra Node in the cluster)
+· An instance of Resource Manager is created in the memory of the Calling Node
+· The Resource Manager then launches containers with appropriate resources (memory) with App Node Manager in memory of the Calling Node
+· Along with this Application Master is invoked. Application Master is “pause” mode till all containers
+· With Task Node Manager (as below) are created
+· The Resource Manager queries the Name Node and finds the Data Nodes (location of the data used)
+· The Resource Manager then launches containers with appropriate resources (memory) with Task Node Manager in all the Data Nodes as above to run the jobs
+· Application Master gives the code to Task Node Manager to run as a Task
+· Task Node Manager is responsible for creating & running tasks. In effect the Mapper of the Job is here
+· Once the Task is completed, the result from the Tasks is sent back to the Application Master
+· Application Master also keeps a track of progress by each Task Node Manager
+· The Application Master also receives the results from each Task Node Manager and aggregates the results
+· In effect the Reducer of the Job is found here
+· Thus, from previous version, Job Tracker has been replaced by Resource Manager & Application Master
+· From previous version, Task Tracker has been replaced by Task Node Managers
+MAP REDUCE FAILURE RECOVERY
+MRv1
+· The processing was managed by a single component called the JobTracker. The JobTracker was responsible for scheduling and coordinating MapReduce tasks on a cluster of worker nodes.
+· In case of a failure of a task or a node, the JobTracker would detect the failure and reschedule the task on another node.
+· If the JobTracker failed, all running MapReduce jobs would be lost, and the cluster would become unavailable until the JobTracker was manually restarted.
+MRv2
+· If a task or node fails, the Application Master can detect the failure and reschedule the task on another node.
+· The Resource Manager can also monitor the health of the cluster and take corrective actions in case of failures.
+· Additionally, MRv2 allows for multiple applications to run on the same cluster simultaneously, so if one application experiences a failure, the other applications can continue to run without interruption.
+· The data processed is also stored in a highly-reliable and scalable storage system, such as HDFS, which provides built-in mechanisms for data replication and recovery.
+· Ensure that the data remains safe and accessible even in case of node failures.
+· Task Failure: new task is started by Task Node Manager
+· Task Node Manager Failure: new container with Task Node Manager is created by Resource Manager this Task Node Manager is given the code and started by Application Master
+· Application Master Failure: New Application Master is started by App Node Manager
+· App Node Manager Failure: new container with App Node Manager is created by Resource Manager this App Node Manager invokes the Application Master
+· Resource Manager Failure: new resource manager with saved state is started
+Why YARN is considered more fault tolerant and safer than MRv1:
+YARN (Yet Another Resource Negotiator) is considered to be more fault tolerant and safer than MRv1 (MapReduce version 1) for several reasons:
+1. Resource Management: YARN is a more advanced resource manager than MRv1, allowing for dynamic allocation of resources to applications based on their needs. This helps prevent overloading of nodes, which can lead to failures.
+2. Fault Tolerance: YARN supports the ability to recover from node failures by automatically re-allocating work to other nodes. This increases the overall reliability of the system and helps prevent data loss.
+3. Scalability: YARN provides the ability to scale out the cluster by adding more nodes, which helps prevent a single node from becoming a bottleneck. This leads to better performance and stability.
+4. Improved Security: YARN supports fine-grained access control and provides better isolation between different applications running on the same cluster. This helps prevent unauthorized access to sensitive data.
+In MRv1:
+If the JobTracker failed, all running MapReduce jobs would be lost, and the cluster would become unavailable until the JobTracker was manually restarted.
+But in MRv2:
+1. If a task or node fails, the Application Master can detect the failure and reschedule the task on another node.
+2. The Resource Manager can also monitor the health of the cluster and take corrective actions in case of failures.
+3. Additionally, MRv2 allows for multiple applications to run on the same cluster simultaneously, so if one application experiences a failure, the other applications can continue to run without interruption.
+4. The data processed is also stored in a highly-reliable and scalable storage system, such as HDFS, which provides built-in mechanisms for data replication and recovery.
+5. Also, ensure that the data remains safe and accessible even in case of node failures.
+In summary, YARN provides improved resource management, fault tolerance, scalability, and security compared to MRv1, making it a safer and more reliable platform for large-scale data processing.
+
+explain the difference in MRv1 and MRv2 wrt recovery (my):
+
+MRv1 and MRv2 are different versions of the MapReduce programming model and framework for distributed data processing. They vary in their approach to handling recovery and fault tolerance.
+MRv1 uses the TaskTracker component for recovery, which tracks task execution and restarts failed tasks on different nodes. However, this method leads to increased latency and difficulties in managing data movement between nodes.
+MRv2, also called YARN, addresses these issues by separating resource management and job scheduling into separate components. This results in more flexible resource allocation and reduces the impact of failures on the entire system. In MRv2, the NodeManager component tracks task execution and restarts failed tasks, while the ResourceManager manages resource allocation across the cluster.
+Overall, MRv2 offers a more scalable and flexible solution for recovery and fault tolerance compared to MRv1.
+
+ppt:
+
+In MRv1, if a task fails, a new task is started by the Task Tracker. If the Task Tracker fails, a new Task Tracker is started by the Job Tracker. However, if the Job Tracker fails, there is no recovery and it becomes a single point of failure.
+In MRv2, if a task fails, a new task is started by the Task Node Manager. If the Task Node Manager fails, a new container with Task Node Manager is created by the Resource Manager and started by the Application Master. If the Application Master fails, a new Application Master is started by the App Node Manager. If the App Node Manager fails, a new container with App Node Manager is created by the Resource Manager and the new App Node Manager invokes the Application Master. In the event of a Resource Manager failure, a new resource manager with saved state is started.
+
+difference between mrv1 and mrv2
+MRv1 and MRv2 (YARN) are two versions of the MapReduce framework in Hadoop with significant differences in their architecture and capabilities. Here are some of the key differences between MRv1 and MRv2:
+1. Architecture: MRv1 has a simple architecture with a single JobTracker and multiple TaskTrackers. MRv2 is built on top of YARN and has a more complex architecture with a ResourceManager, NodeManagers, and ApplicationMasters.
+2. Scalability: MRv1 has limited scalability due to the single point of failure of the JobTracker and lack of resource management. MRv2/YARN is designed to be highly scalable and can manage a much larger number of nodes and jobs.
+3. Resource Management: MRv1 has limited resource management and scheduling capabilities. MRv2/YARN provides more advanced resource management and scheduling features, such as support for multiple resource types, pluggable scheduling policies, and dynamic resource allocation.
+4. Compatibility: MRv2 is backward compatible with MRv1, which means that applications developed for MRv1 can be easily migrated to MRv2. However, there are some differences in the API and configuration between the two versions.
+5. Performance: MRv2/YARN provides better performance for large-scale data processing compared to MRv1, due to its improved resource management and scheduling capabilities.
+Overall, MRv2/YARN provides a more scalable, flexible, and efficient architecture for processing large-scale data compared to MRv1. MRv1 is still used in some legacy applications, but most new applications are now developed using MRv2/YARN or higher-level processing frameworks such as Apache Spark or Apache Flink.
+ 
+map reduce failure recovery
+MapReduce failure recovery is an important aspect of the framework as it ensures that jobs can be completed even if there are failures in the system. Here are some of the ways in which MapReduce handles failure recovery:
+1. Task-level retries: MapReduce can automatically retry failed map and reduce tasks. When a task fails, the MapReduce framework can automatically reschedule the task on another node in the cluster. The number of retries is configurable, and by default, it is set to 4.
+2. Speculative execution: MapReduce can run multiple copies of the same task on different nodes in the cluster. If a task takes longer than expected to complete, the framework can start another copy of the same task on a different node. The first copy to complete is used, and the other copies are terminated. This approach helps to ensure that tasks are completed within a reasonable time, even if some nodes or tasks fail.
+3. Task and Job-level monitoring: MapReduce provides a monitoring mechanism that allows the framework to detect task and job failures. If a task or job fails, the monitoring mechanism can trigger a set of actions, such as rescheduling the task or restarting the job.
+4. Backup tasks: MapReduce can also use backup tasks, which are tasks that are run in parallel with the original tasks. If a task fails, the backup task can take over and complete the job.
+5. Job-level checkpoints: MapReduce can use checkpoints to store intermediate data generated by tasks during job execution. If a task fails, the framework can use the checkpoint to restart the task from where it left off, rather than starting the task from the beginning.
+Overall, MapReduce provides several mechanisms to handle failure recovery and ensure that jobs can be completed even in the presence of node failures or other issues. These mechanisms can help to improve the robustness and reliability of large-scale data processing systems.
+
+Apache Hive Architecture
+Apache Hive is a data warehousing tool that provides a SQL-like interface for querying and analyzing large datasets stored in Hadoop. It was developed by Facebook and later open-sourced under the Apache License. Apache Hive architecture comprises different components that work together to provide efficient querying and processing of large-scale data.
+•	 Data warehouse system for Hadoop
+•	 Run SQL-like queries that get compiled and run as Map Reduce jobs
+•	 Displays the result back to the user
+•	 Data in Hadoop even though generally unstructured has some vague structure associated with it
+•	The key components of the Apache Hive architecture are:
+•	 Metastore stores the catalog and metadata about tables, columns, partitions, etc
+•	 Driver manages the lifecycle of a HiveQL statement as it moves through Hive
+•	 Query Compiler compiles HiveQL into Map-Reduce tasks
+•	 Execution Engine executes the tasks produced by the compiler in proper dependency order
+•	 System provides an interface to view the results in the Hive Client or over Web UI
+
+Apache Hive is a data warehouse system that provides a SQL-like interface to Hadoop Distributed File System (HDFS) and other data sources such as Apache HBase, Amazon S3, and Microsoft Azure Data Lake Storage. Here is a high-level overview of the Apache Hive architecture:
+1.	Metastore: The Metastore is a central repository that stores metadata about the data stored in Hive. It contains information about the database schemas, tables, partitions, and other relevant information. The Metastore can use a variety of databases, such as MySQL or PostgreSQL, to store the metadata.
+2. Hive Query Language (HQL): HQL is a SQL-like language that is used to query the data stored in Hive. HQL queries are translated into MapReduce or Tez jobs, which are executed on the Hadoop cluster.
+3. Hive Driver: The Hive Driver is responsible for parsing and compiling HQL queries into executable tasks, which are then submitted to the Hadoop cluster. The Driver also interacts with the Metastore to retrieve metadata about the tables and partitions.
+4. Execution Engine: The Execution Engine is responsible for executing the tasks generated by the Hive Driver. Hive supports multiple execution engines, including MapReduce and Tez.
+5. Hadoop Distributed File System (HDFS): Hive stores data in HDFS, which is a distributed file system that provides reliable and scalable storage for large-scale data processing.
+6. Hadoop Cluster: Hive runs on top of the Hadoop cluster and leverages the Hadoop ecosystem to provide a scalable and fault-tolerant data processing platform.
+Overall, the Apache Hive architecture provides a flexible and scalable data warehouse system that can handle large-scale data processing workloads. The Metastore and HQL provide a powerful interface for managing and querying data stored in Hive, while the Hadoop cluster provides a reliable and scalable execution platform for processing the data
+Apache spark, Difference and similarities between Hadoop and Spark
+Apache Spark is a big data processing framework that provides a fast and general-purpose platform for large-scale data processing. It was developed by the Apache Software Foundation and is open-source, under the Apache License.
+•	 Spark is used for data analytics in cluster computing framework
+•	 Spark fits into the Hadoop open-source community, building on top of the Hadoop Distributed File System (HDFS)
+•	 Spark provides an easier to use alternative to Hadoop Map-Reduce and offers performance up to 10 times faster than previous generation systems like Hadoop Map-Reduce for certain applications
+•	 Spark is a framework for writing fast, distributed programs
+•	 Spark solves similar problems as Hadoop Map-Reduce does but with a fast in-memory approach.
+•	 Spark can be used interactively to quickly process and query big data sets
+•	 Spark has inbuilt tools for
+• interactive query analysis (Shark)
+• large-scale graph processing and analysis (Bagel)
+• real-time analysis (Spark Streaming)
+Apache Spark — Architecture:
+ Spark basically uses an in-memory MapReduce approach
+ Spark revolves around the concept of a Resilient Distributed Dataset (RDD).
+ RRD is a fault-tolerant collection of elements that can be operated on in parallel.
+ There are two ways to create RDDs:
+• parallelizing an existing collection in your driver program, Hadoop
+• referencing a dataset in a shared filesystem like HDFS or a DBMS like HBase
+Spark is designed to handle large-scale data processing tasks, including batch processing, stream processing, machine learning, and graph processing. It is built on top of the Hadoop Distributed File System (HDFS) and can read data from HDFS, HBase, Cassandra, and other data sources.
+One of the key features of Apache Spark is its ability to process data in memory, which makes it faster than other big data processing frameworks such as Hadoop. It achieves this through the Resilient Distributed Dataset (RDD) abstraction, which allows data to be processed in parallel across a cluster of computers.
+Spark provides a unified API for data processing that supports multiple programming languages such as Scala, Java, Python, and R. This makes it easy for data scientists and developers to work with large-scale data without needing to learn a new programming language or framework.
+In addition to its core processing capabilities, Apache Spark also provides a range of libraries for machine learning (MLlib), graph processing (GraphX), and stream processing (Spark Streaming). These libraries provide pre-built algorithms and data structures that can be used to solve common data processing tasks.
+In summary, Apache Spark is a fast and general-purpose big data processing framework that provides a unified API for data processing across a range of data processing tasks. It is designed to handle large-scale data processing tasks and supports multiple programming languages and data sources.
+Apache spark:
+
+Apache Spark is an open-source distributed computing system that provides an interface for programming clusters with implicit data parallelism and fault tolerance. Spark is designed to perform in-memory computations and can process large volumes of data in a distributed fashion. Here are some of the key features and components of Apache Spark:
+1. Resilient Distributed Datasets (RDDs): RDDs are the fundamental data structure in Spark. RDDs are immutable distributed collections of data that can be processed in parallel across a cluster. RDDs can be created from Hadoop Distributed File System (HDFS) or other data sources, and can be cached in memory to allow for faster processing.
+2. Spark Core: Spark Core is the underlying computational engine that provides distributed task scheduling, memory management, and fault recovery. Spark Core provides the runtime environment for Spark applications and manages the distributed processing of RDDs.
+3. Spark SQL: Spark SQL is a Spark module that provides a SQL interface for querying structured and semi-structured data. Spark SQL allows users to query data in Spark using SQL commands, and also provides a DataFrame API for working with structured data.
+4. Spark Streaming: Spark Streaming is a Spark module that allows for the processing of real-time streaming data. Spark Streaming can process data from a variety of sources, including Kafka, Flume, and HDFS.
+5. MLlib: MLlib is a Spark module that provides a library of machine learning algorithms for processing large-scale data. MLlib includes algorithms for classification, regression, clustering, and collaborative filtering.
+6. GraphX: GraphX is a Spark module that provides a library for processing graph data. GraphX allows users to create, transform, and query graphs using a set of high-level APIs.
+Overall, Apache Spark is a powerful distributed computing system that can be used for a wide range of data processing and analysis tasks. Spark's ability to process data in-memory and provide fault tolerance and data parallelism makes it an efficient and scalable solution for big data processing.
+Apache Spark and Hadoop are two popular big data processing frameworks. While both can handle large-scale data processing, they have some differences and similarities.
+Similarities:
+· Both Apache Spark and Hadoop are designed to handle large-scale data processing tasks.
+· They both have the ability to distribute data processing tasks across a cluster of computers, providing scalability and fault tolerance.
+· They both support data processing with MapReduce programming paradigm.
+· They both support data processing on HDFS (Hadoop Distributed File System).
+Differences:
+· Apache Spark is faster than Hadoop, as it keeps the data in memory rather than writing it to disk after each step in the processing pipeline. This makes it more suitable for real-time processing, machine learning, and interactive data analysis.
+· Hadoop is designed for batch processing, while Apache Spark can handle both batch processing and real-time processing. Apache Spark provides a streamlined data processing pipeline that allows for real-time data processing with its in-memory processing capabilities.
+· Apache Spark has a more extensive API than Hadoop, which makes it easier to work with complex data types and implement complex algorithms.
+· Hadoop has been around for longer than Apache Spark, so it has more tools, libraries, and resources available for data processing and analytics.
+In summary, while both Apache Spark and Hadoop are powerful tools for big data processing, they have different strengths and weaknesses. Hadoop is a great option for batch processing, while Apache Spark is a good choice for real-time processing and iterative data analysis.
+Columnar Database
+A columnar database is a database that stores data in columns rather than rows. In a row-based database, each row of data is stored together, and each row contains multiple columns of data. In a columnar database, however, each column of data is stored together, and each column contains multiple rows of data.
+The advantage of a columnar database is that it can perform certain types of queries much faster than a traditional row-based database. For example, if you want to retrieve a subset of data from a particular column, you can simply read that column and ignore the others, which is much faster than reading every row of a table. Additionally, because columnar databases store data in a compressed format, they require less disk space than traditional row-based databases.
+•	 A columnar database, also known as a column-oriented database
+•	 A DBMS that stores data in columns rather than in rows as RDBMS
+•	 The table schema defines only column families, which are the key value pairs.
+•	 A table can have multiple column families and each column family can have any number of columns.
+•	 Subsequent column values are stored contiguously on the disk.
+•	 Each cell value of the table has a timestamp.
+•	 The tables in Columnar database are sorted by row.
+•	 The rows of tables in Columnar database are identified by a row-key.
+•	 The difference centered around performance, storage and schema modifying techniques.
+•	 Efficient write & read data to and from hard disk storage; speeds up the time it takes to return a query.
+•	 Main benefits columnar operations like MIN, MAX, SUM, COUNT and AVG performed very rapidly.
+•	 Columnar Database allows random read & write in Hadoop.
+•	 Columnar database fulfills the ACID principles of a database.
+A columnar database is a type of database management system (DBMS) that stores data by column rather than by row, as is typically done in a traditional row-based DBMS. In a columnar database, the data for each column is stored contiguously on disk or in memory, allowing for more efficient query processing and faster data retrieval.
+Here are some of the key features and benefits of columnar databases:
+1. Compression: Columnar databases can be highly compressed, as the data within each column is usually highly repetitive. This can result in significant savings in storage space and can also improve query performance, as fewer disk reads are required to retrieve data.
+2. Query Performance: Columnar databases can provide faster query performance than row-based databases, as the data for each column is stored contiguously and can be accessed more efficiently. This can be especially beneficial for complex analytical queries that involve large volumes of data.
+3. Schema Flexibility: Columnar databases are schema-flexible, as new columns can be added to the database without changing the existing schema. This can be useful for applications that require frequent schema changes or have large numbers of columns.
+4. Parallel Processing: Columnar databases can be designed for parallel processing, allowing for multiple queries to be processed simultaneously. This can result in faster query performance and improved scalability.
+5. Analytics and Business Intelligence: Columnar databases are well-suited for analytics and business intelligence applications, as they can handle large volumes of data and provide fast query performance for complex analytical queries.
+Overall, columnar databases are a powerful tool for managing large volumes of data and can provide significant benefits in terms of storage efficiency, query performance, schema flexibility, and parallel processing.
+How are Columnar Databases Used in Hadoop/Big Data Analysis?
+Hadoop includes a processing framework called MapReduce. MapReduce is a programming model that allows developers to write distributed processing applications that can process large datasets in parallel across many machines.
+However, MapReduce has some limitations when it comes to data processing. Specifically, it is not very efficient at processing data in a columnar format. This is because MapReduce is designed to process data in a row-based format, where each row of data is processed independently of the others. This means that if you want to perform a query that involves a single column of data, MapReduce must read every row of the dataset, which can be very slow and inefficient.
+To address this limitation, many organizations are using columnar databases in conjunction with Hadoop. These databases are designed to work with Hadoop’s distributed processing framework and are optimized for columnar data storage and processing.
+One example of a columnar database that is commonly used with Hadoop is Apache HBase. HBase is a distributed, column-oriented database that is designed to work with Hadoop. It is optimized for random reads and writes, which makes it well-suited for real-time data processing.
+Columnar databases are becoming increasingly popular in big data analysis, especially in the context of Hadoop. They are highly efficient at processing and analyzing large volumes of data in parallel, which makes them well-suited for use cases that involve real-time data processing and analytics.
+In order to use columnar databases with Hadoop, organizations need to select a database that is designed to work with Hadoop’s distributed processing framework.
+Columnar databases are particularly well-suited for analytical workloads, where large amounts of data need to be processed and analyzed quickly. They are commonly used in data warehousing, business intelligence, and analytics applications, where data needs to be queried and aggregated across multiple dimensions.
+However, columnar databases may not be as efficient for transactional workloads, where data is frequently updated, inserted, or deleted. In these cases, a traditional row-based database may be a better choice. Additionally, because columnar databases are a relatively new technology, they may not be as widely supported by third-party tools and applications as traditional relational databases.
+
+PIG
+
+Architecture:
+Apache Pig is an open-source platform for analyzing large data sets. It was developed at Yahoo! and is now maintained by the Apache Software Foundation. Pig is built on top of Apache Hadoop and provides a set of tools and utilities for working with large, complex data sets.
+It provides a high-level language called Pig Latin for expressing data analysis programs. Pig Latin is a scripting language that allows users to write data analysis programs in a high-level, SQL-like syntax. The language is designed to be intuitive and expressive, so users can focus on analyzing the data rather than writing low-level code.
+The language includes operators and functions for performing common data transformations. Pig Latin includes a set of built-in operators and functions that allow users to perform common data transformations, such as filtering, grouping, joining, and aggregation. These operators and functions can be combined in various ways to create more complex data transformations.
+Pig Latin scripts are compiled into a series of MapReduce jobs that can be executed on a Hadoop cluster. Pig Latin scripts are compiled into a series of MapReduce jobs that can be executed on a Hadoop cluster. The Pig Latin compiler generates a plan that describes the logical and physical operations required to execute the script, and this plan is then executed on the Hadoop cluster.
+The Pig Latin compiler generates a plan that describes the logical and physical operations required to execute the script. The Pig Latin compiler takes the Pig Latin script as input and generates a plan that describes the logical and physical operations required to execute the script. This plan is then executed on the Hadoop cluster.
+The Pig Latin runtime system manages the execution of MapReduce jobs on a Hadoop cluster and provides a set of built-in functions and operators for data processing and manipulation. The Pig Latin runtime system manages the execution of MapReduce jobs on a Hadoop cluster and provides a set of built-in functions and operators for data processing and manipulation. It communicates with the Hadoop Distributed File System (HDFS) to read and write data and manages the execution of MapReduce jobs.
+Apache Pig provides tools and utilities for managing and analyzing data, such as the Pig Latin script editor and the Pig Latin grunt shell. Apache Pig provides a number of tools and utilities for managing and analyzing data. For example, the Pig Latin script editor provides an integrated development environment (IDE) for writing and debugging Pig Latin scripts, and the Pig Latin grunt shell provides an interactive command-line interface for executing Pig Latin scripts and exploring data.
+The architecture of Apache Pig is modular and extensible, allowing users to add custom functions and operators to meet their specific needs. The architecture of Apache Pig is designed to be modular and extensible, allowing users to add custom functions and operators to meet their specific needs. This makes Apache Pig a flexible platform that can be customized to meet a wide range of data analysis needs.
+PIG – ARCHITECTURE
+
+Apache Pig is a high-level platform for creating MapReduce programs used with Hadoop. It provides a high-level language, called Pig Latin, for expressing data analysis programs which is then compiled into MapReduce programs. Here is a brief overview of Pig's architecture:
+1. Pig Latin: Pig Latin is a high-level scripting language used for expressing data analysis programs. It is a data flow language that allows users to express complex data transformations with minimal programming.
+2. Pig Latin Compiler: The Pig Latin Compiler is responsible for compiling the Pig Latin scripts into a sequence of MapReduce programs. The compiler takes the Pig Latin script as input, optimizes it, and generates the corresponding MapReduce program that can be executed on a Hadoop cluster.
+3. Execution Engine: The Execution Engine is responsible for executing the generated MapReduce program on a Hadoop cluster. The engine takes care of job scheduling, data partitioning, and task coordination to ensure that the program runs correctly and efficiently.
+4. Pig Latin Operators: Pig Latin Operators are used to perform data transformation operations on large datasets. Pig provides a wide range of operators, including filters, joins, aggregations, and sorting, which can be combined to create complex data transformation pipelines.
+5. Data Storage: Pig can read and write data from a wide range of data storage systems, including HDFS, HBase, Amazon S3, and local file systems.
+6. User-Defined Functions (UDFs): Pig provides the ability to define custom user-defined functions (UDFs) in Java or Python, which can be used in Pig Latin scripts to perform complex data transformations that are not supported by built-in operators.
+
+Overall, Pig's architecture provides a high-level, flexible, and scalable platform for creating MapReduce programs using Pig Latin, allowing users to perform complex data transformations on large datasets with minimal programming.
+
+Here are some features of Pig in Hadoop:
+
+High-level Language: Pig provides a high-level language called Pig Latin, which is used to write data transformations. Pig Latin is a simple and easy-to-learn language that allows users to perform complex data transformations without having to write low-level MapReduce code.
+
+Flexibility: Pig provides flexibility in data processing by allowing users to use custom functions written in Java, Python, or any other language supported by Pig. This allows users to perform complex data transformations that are not available in the Pig Latin language.
+
+Extensibility: Pig is designed to be extensible, which means that it can be easily integrated with other Hadoop ecosystem tools such as Apache Tez and Apache Spark. This allows users to take advantage of the latest advances in the Hadoop ecosystem.
+
+Iterative Processing: Pig supports iterative processing, which is useful in machine learning algorithms. Pig provides operators such as FOREACH and GROUP BY, which can be used to perform iterative processing.
+
+Schema Discovery: Pig can discover the schema of data at runtime, which allows users to process data without having to specify the schema beforehand. This feature saves time and makes data processing more flexible.
+
+Optimization: Pig provides optimization techniques such as pushdown optimization and projection and filtering optimization. These optimization techniques improve the performance of Pig jobs by reducing the amount of data processed.
+
+Debugging: Pig provides tools such as Pig Grunt shell and Pig Latin scripts, which can be used to debug Pig jobs. These tools allow users to test and debug Pig scripts before running them on a Hadoop cluster.
+
+Overall, Pig provides a powerful and flexible platform for data processing in Hadoop. It simplifies the MapReduce programming by providing a higher-level abstraction for data transformation, and provides a range of features that make data processing more efficient and flexible.
+
+Case sensitivity:
+Pig in Hadoop is case sensitive, which means that uppercase and lowercase letters are treated as distinct. This applies to identifiers such as relation names, field names, and Pig Latin keywords.
+
+In addition to identifiers and keywords, Pig also treats strings as case-sensitive. This means that "Hello" and "hello" are treated as different strings.
+
+Hive Architecture:
+
+Apache Hive is a data warehouse system for Hadoop. It was developed at Facebook and is now maintained by the Apache Software Foundation. Hive is built on top of Hadoop and provides a SQL-like interface for working with large, complex data sets stored in Hadoop.
+Hive allows users to run SQL-like queries that get compiled and run as MapReduce jobs. Hive uses a query language called HiveQL, which is similar to SQL but is designed to work with the structure of data in Hadoop. When a HiveQL query is submitted, it is compiled into a series of MapReduce jobs that can be executed on a Hadoop cluster.
+Hive displays the result back to the user. Once the MapReduce jobs have finished executing, Hive aggregates the results and displays them back to the user. The results can be viewed in a variety of formats, including text, CSV, and JSON.
+Data in Hadoop even though generally unstructured has some vague structure associated with it. Unlike traditional relational databases, data stored in Hadoop is generally unstructured or semi-structured, meaning that it may not conform to a specific schema. However, even unstructured data in Hadoop has some vague structure associated with it, such as the location of the data, the file format, or the metadata associated with the data. Hive leverages this vague structure to provide a SQL-like interface for working with the data, allowing users to query and analyze data in Hadoop even if it is not structured in a traditional sense.
+The architecture of Hive includes several components, such as the HiveQL parser, the query planner, and the execution engine. The HiveQL parser is responsible for parsing HiveQL queries and generating an abstract syntax tree (AST) that represents the query. The query planner takes the AST and generates a query plan that describes how the query will be executed. Finally, the execution engine executes the query plan by compiling it into a series of MapReduce jobs that can be executed on a Hadoop cluster.
+Hive includes several built-in storage handlers that allow it to work with different file formats, such as text, CSV, and Parquet. Hive also includes a metastore that stores metadata about tables and partitions in a separate database, such as MySQL or PostgreSQL. This allows Hive to manage metadata separately from data, which can improve performance and scalability.
+Hive also supports the use of user-defined functions (UDFs) and user-defined aggregate functions (UDAFs) that can be used to extend the functionality of HiveQL. UDFs and UDAFs can be written in Java, Python, or other programming languages and can be used to perform custom data transformations and analysis.
+
+Features:
+
+SQL-like Query Language: Hive provides a SQL-like query language called HiveQL (or HQL) that allows users to write queries using familiar SQL syntax. HiveQL supports a wide range of SQL operations, including SELECT, JOIN, GROUP BY, ORDER BY, and many others.
+Schema on Read: Hive allows users to define a schema for their data on read, which means that data can be loaded into Hive without the need to pre-define a schema. This is in contrast to traditional relational databases, where the schema must be defined before the data can be loaded.
+Data Storage and Processing: Hive supports a variety of data storage and processing formats, including HDFS, Apache HBase, and Amazon S3. Hive also supports different processing engines, including Apache Tez and Apache Spark.
+User-Defined Functions: Hive allows users to write their own User-Defined Functions (UDFs) in Java, Python, or other programming languages. This provides users with the ability to extend the functionality of Hive to meet their specific needs.
+Data Partitioning and Buckets: Hive supports data partitioning, which allows users to split large datasets into smaller, more manageable partitions based on a specific column or set of columns. Hive also supports data bucketing, which is a way of dividing data into more granular subsets based on a hash function.
+Integration with Other Tools: Hive integrates with many other Hadoop tools and systems, including Hadoop Distributed File System (HDFS), Apache Spark, Apache Storm, and Apache Pig
+
