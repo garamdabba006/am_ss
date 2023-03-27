@@ -962,7 +962,22 @@ Pig Architecture contains the Pig Latin Interpreter and will be used on the Clie
 Performance flow
 When the Apache Pig editor creates scripts, they are saved in a local file system in the form of user-defined tasks. When we move Pig Script, it interacts with the Pig Latin Compiler that separates the task and uses a series of MR tasks, while Pig Compiler downloads data to HDFS (i.e. the input file). After starting MR operations, the output file is saved in HDFS.
 
-Apache Pig Components
+Difference btw:
+Apache Pig:
+Scripting language
+Provides a higher level of abstraction
+Requires a few lines of code (10 lines of code can summarize 200 lines of Map Reduce code)
+Requires less development time and effort
+Lesser code efficiency
+
+MAP REDUCE:
+Compiled language
+Provides a low level of abstraction
+Requires a more extensive code (more lines of code)
+Requires more development time and effort
+Higher efficiency of code in comparison to Apache Pig
+
+# Apache Pig Components
 As shown in the figure, there are various components in the Apache Pig framework. Let us take a look at the major components.
 Parser
 Initially the Pig Scripts are handled by the Parser. It checks the syntax of the script, does type checking, and other miscellaneous checks. The output of the parser will be a DAG (directed acyclic graph), which represents the Pig Latin statements and logical operators.
